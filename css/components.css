@@ -1,0 +1,207 @@
+.btn {
+  min-height: 42px;
+  padding: 0.72rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-weight: 600;
+  box-shadow: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: none;
+}
+
+.btn-secondary,
+.btn-ghost {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.btn-secondary:hover,
+.btn-ghost:hover,
+.btn-danger:hover {
+  border-color: var(--line-strong);
+}
+
+.btn-danger {
+  background: rgba(243, 18, 96, 0.12);
+  color: #ffd7e5;
+  border-color: rgba(243, 18, 96, 0.2);
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+}
+
+.icon-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.icon-btn.small {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+}
+
+.input,
+.select,
+.textarea {
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: rgba(91, 140, 255, 0.42);
+  box-shadow: 0 0 0 4px rgba(91, 140, 255, 0.10);
+}
+
+.field span {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.task-item,
+.note-card,
+.goal-card,
+.workout-item,
+.finance-item,
+.reading-card,
+.session-card,
+.subject-card,
+.routine-item,
+.habit-card,
+.result-card,
+.agenda-item,
+.alert-item,
+.plan-item,
+.material-card,
+.calendar-mini-item {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.task-item:hover,
+.note-card:hover,
+.goal-card:hover,
+.workout-item:hover,
+.finance-item:hover,
+.reading-card:hover,
+.session-card:hover,
+.subject-card:hover,
+.routine-item:hover,
+.habit-card:hover,
+.result-card:hover,
+.agenda-item:hover,
+.alert-item:hover,
+.plan-item:hover,
+.material-card:hover,
+.calendar-day:hover,
+.calendar-mini-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-primary);
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+}
+
+.empty-state-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent-primary);
+}
+
+.empty-state-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.progress,
+.bar-track {
+  background: rgba(255,255,255,0.05);
+}
+
+.progress > span,
+.bar-fill,
+.heat-box.active {
+  background: linear-gradient(90deg, var(--accent-primary), #7aa4ff);
+}
+
+.toast {
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.modal-backdrop,
+.sidebar-backdrop {
+  background: rgba(5, 8, 14, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.modal-dialog {
+  width: min(100% - 2rem, 720px);
+  padding: 20px;
+}
+
+.table th,
+.table td {
+  border-bottom-color: var(--border-soft);
+}
+
+.table tr:hover td {
+  background: rgba(255,255,255,0.01);
+}
+
+.result-group mark,
+.search-highlight {
+  background: rgba(91, 140, 255, 0.18);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 0 4px;
+}
+
+.loader-orb {
+  border-color: rgba(255,255,255,0.07);
+  border-top-color: var(--accent-primary);
+  border-right-color: var(--accent-hover);
+}

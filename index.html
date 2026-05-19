@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Controly - organize sua rotina, acompanhe suas tarefas e cuide dos seus estudos, metas, finanças, leitura, treinos e notas em um só lugar."
+    />
+    <title>Controly</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./img/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./img/apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Controly" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app-loader" class="app-loader active" aria-live="polite">
+      <div class="loader-orb"></div>
+      <p id="app-loader-text">Carregando seu painel pessoal...</p>
+    </div>
+
+    <section id="auth-screen" class="auth-screen hidden">
+      <div class="auth-hero glass-card">
+        <div class="brand-mark">
+          <img src="./img/LOGO.png" alt="Logotipo do Controly" />
+          <div>
+            <span class="eyebrow">Tudo da sua rotina em um só lugar</span>
+            <h1>Controly</h1>
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <h2>Organize o dia, acompanhe seus planos e mantenha o foco no que importa.</h2>
+          <p>
+            Use o Controly para planejar tarefas, registrar itens da agenda e acompanhar sua evolução
+            pelo computador, tablet ou celular.
+          </p>
+        </div>
+
+        <div class="hero-grid">
+          <article class="hero-card glass-card">
+            <span class="pill">Atividades</span>
+            <h3>Planeje o dia com mais clareza</h3>
+            <p>Cadastre tarefas, organize repetições e veja facilmente o que precisa ser feito.</p>
+          </article>
+          <article class="hero-card glass-card">
+            <span class="pill">Estudos</span>
+            <h3>Tenha mais controle nos estudos</h3>
+            <p>Guarde matérias, tarefas e prioridades para estudar com mais foco e menos confusão.</p>
+          </article>
+          <article class="hero-card glass-card">
+            <span class="pill">Controle</span>
+            <h3>Acompanhe sua evolução em várias áreas</h3>
+            <p>Veja seu progresso em metas, leitura, treinos e finanças para decidir melhor seus próximos passos.</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="auth-panel glass-card">
+        <div class="auth-panel-header">
+          <span class="eyebrow">Acesse sua conta</span>
+          <h2>Entre para continuar</h2>
+          <p>Use seu e-mail e senha para abrir seu painel e continuar organizando sua rotina.</p>
+        </div>
+
+        <form id="login-form" class="stack-form">
+          <label class="field">
+            <span>E-mail</span>
+            <input
+              class="input"
+              id="login-email"
+              type="email"
+              autocomplete="email"
+              placeholder="Digite seu e-mail"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>Senha</span>
+            <input
+              class="input"
+              id="login-password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Digite sua senha"
+              required
+            />
+          </label>
+
+          <button class="btn btn-primary btn-lg" type="submit">
+            Entrar no meu painel
+          </button>
+
+          <p id="login-feedback" class="form-feedback" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <div id="app-shell" class="app-shell hidden">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-brand">
+          <img src="./img/LOGO.png" alt="Logotipo do Controly" />
+          <div class="sidebar-brand-copy">
+            <h1>Controly</h1>
+            <span>Seu painel de organização</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Navegação principal">
+          <button class="nav-btn active" data-section="dashboard" title="Painel"><i data-lucide="layout-dashboard"></i><span class="nav-label">Painel</span></button>
+          <button class="nav-btn" data-section="activities" title="Atividades"><i data-lucide="layers-3"></i><span class="nav-label">Atividades</span></button>
+          <button class="nav-btn" data-section="calendar" title="Calendário"><i data-lucide="calendar-days"></i><span class="nav-label">Calendário</span></button>
+          <button class="nav-btn" data-section="goals" title="Metas"><i data-lucide="target"></i><span class="nav-label">Metas</span></button>
+          <button class="nav-btn" data-section="studies" title="Estudos"><i data-lucide="graduation-cap"></i><span class="nav-label">Estudos</span></button>
+          <button class="nav-btn" data-section="reading" title="Leitura"><i data-lucide="book-open"></i><span class="nav-label">Leitura</span></button>
+          <button class="nav-btn" data-section="workouts" title="Treinos"><i data-lucide="dumbbell"></i><span class="nav-label">Treinos</span></button>
+          <button class="nav-btn" data-section="finance" title="Finanças"><i data-lucide="wallet"></i><span class="nav-label">Finanças</span></button>
+          <button class="nav-btn" data-section="notes" title="Notas"><i data-lucide="sticky-note"></i><span class="nav-label">Notas</span></button>
+          <button class="nav-btn" data-section="search" title="Busca"><i data-lucide="search"></i><span class="nav-label">Busca</span></button>
+          <button class="nav-btn" data-section="trash" title="Lixeira"><i data-lucide="trash-2"></i><span class="nav-label">Lixeira</span></button>
+        </nav>
+
+        <div class="sidebar-footer glass-card">
+          <div class="sidebar-user">
+            <span class="sidebar-label">Minha conta</span>
+            <strong id="sidebar-user-name">Usuário</strong>
+            <small id="sidebar-user-email">usuario@email.com</small>
+          </div>
+          <button id="logout-btn" class="btn btn-secondary btn-block" type="button">
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+      <div class="app-main">
+        <header class="topbar glass-card">
+          <div class="topbar-left">
+            <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Abrir menu"><i data-lucide="panel-left-close"></i></button>
+            <div class="topbar-title">
+              <span class="eyebrow">Controly</span>
+              <h2 id="section-title">Painel</h2>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <button id="global-search-trigger" class="quick-search-trigger" type="button" aria-label="Abrir busca global">
+              <span class="quick-search-trigger-icon"><i data-lucide="search"></i></span>
+              <span class="quick-search-trigger-copy">
+                <strong>Buscar informações</strong>
+                <small>Atalho: Ctrl + K</small>
+              </span>
+            </button>
+            <button id="theme-toggle" class="icon-btn" type="button" aria-label="Alternar tema"><i data-lucide="sun-medium"></i></button>
+            <div class="topbar-account">
+              <strong id="topbar-user-name">Usuário</strong>
+              <small id="topbar-user-email">usuario@email.com</small>
+            </div>
+            <div class="date-chip">
+              <span>Hoje</span>
+              <strong id="current-date-label">--</strong>
+            </div>
+            <button id="topbar-logout-btn" class="btn btn-secondary topbar-logout" type="button">
+              Sair
+            </button>
+          </div>
+        </header>
+
+        <main class="content-area">
+          <section id="section-dashboard" class="view-section active"></section>
+          <section id="section-activities" class="view-section"></section>
+          <section id="section-calendar" class="view-section"></section>
+          <section id="section-goals" class="view-section"></section>
+          <section id="section-studies" class="view-section"></section>
+          <section id="section-reading" class="view-section"></section>
+          <section id="section-workouts" class="view-section"></section>
+          <section id="section-finance" class="view-section"></section>
+          <section id="section-notes" class="view-section"></section>
+          <section id="section-search" class="view-section"></section>
+          <section id="section-trash" class="view-section"></section>
+        </main>
+      </div>
+    </div>
+
+    <div id="search-palette" class="search-palette" aria-hidden="true">
+      <div class="search-palette-backdrop" data-close-search="true"></div>
+      <div class="search-palette-dialog glass-card" role="dialog" aria-modal="true" aria-labelledby="search-palette-title">
+        <div class="search-palette-header">
+          <div>
+            <span class="eyebrow">Busca rápida</span>
+            <h3 id="search-palette-title">Encontre tarefas, metas, notas e registros com facilidade</h3>
+          </div>
+          <button id="search-palette-close" class="icon-btn" type="button" aria-label="Fechar busca"><i data-lucide="x"></i></button>
+        </div>
+        <div class="search-palette-toolbar">
+          <label class="search-palette-field" for="search-palette-input">
+            <i data-lucide="search"></i>
+            <input id="search-palette-input" class="search-palette-input" type="text" placeholder="Digite o que deseja encontrar..." autocomplete="off" />
+          </label>
+          <div id="search-palette-meta" class="search-palette-meta">Comece a digitar para ver os resultados</div>
+        </div>
+        <div id="search-palette-recent" class="search-palette-recent"></div>
+        <div id="search-palette-results" class="search-palette-results"></div>
+      </div>
+    </div>
+
+    <div id="modal-root" class="modal-root" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <div class="modal-dialog glass-card" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <span id="modal-eyebrow" class="eyebrow"></span>
+            <h3 id="modal-title">Detalhes</h3>
+          </div>
+          <button id="modal-close" class="icon-btn" type="button" aria-label="Fechar modal"><i data-lucide="x"></i></button>
+        </div>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+    <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+    <template id="empty-state-template">
+      <div class="empty-state glass-card">
+        <div class="empty-state-icon"><i data-lucide="inbox"></i></div>
+        <h3 class="empty-state-title"></h3>
+        <p class="empty-state-description"></p>
+      </div>
+    </template>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="./app.js?v=estudos-tarefa-fix-20260428"></script>
+  </body>
+</html>

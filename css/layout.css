@@ -1,0 +1,242 @@
+.glass-card,
+.panel,
+.stat-card,
+.list-card,
+.timeline-card,
+.kanban-column,
+.day-card,
+.metric-card,
+.result-group,
+.calendar-weekday,
+.calendar-day,
+.subject-note-box,
+.habit-day,
+.toast,
+.modal-dialog,
+.sidebar-footer {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: none;
+}
+
+.auth-screen {
+  width: min(100%, 1520px);
+  padding: 24px;
+  gap: 24px;
+}
+
+.auth-hero,
+.auth-panel,
+.topbar,
+.sidebar-footer,
+.modal-dialog {
+  border-radius: var(--radius-lg);
+}
+
+.auth-hero {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)), var(--surface-primary);
+}
+
+.hero-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hero-card {
+  background: var(--surface-secondary);
+  border-radius: var(--radius-md);
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  padding: 20px 14px;
+  background: rgba(13, 15, 20, 0.94);
+  border-right: 1px solid var(--border-soft);
+  gap: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-brand {
+  padding: 10px 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.sidebar-brand-copy h1,
+.sidebar-brand h1,
+.brand-mark h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sidebar-nav {
+  gap: 6px;
+}
+
+.nav-btn {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.nav-btn i,
+.nav-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  transform: none;
+}
+
+.nav-btn.active {
+  background: var(--accent-soft);
+  border-color: rgba(91,140,255,0.2);
+  color: var(--text-primary);
+}
+
+.sidebar-footer {
+  padding: 14px;
+  gap: 14px;
+}
+
+.app-main {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-width));
+  background: transparent;
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  width: var(--sidebar-collapsed-width);
+}
+
+.app-shell.sidebar-collapsed .sidebar .sidebar-brand-copy,
+.app-shell.sidebar-collapsed .sidebar .nav-label,
+.app-shell.sidebar-collapsed .sidebar .sidebar-footer {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .app-main {
+  margin-left: var(--sidebar-collapsed-width);
+  width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  min-height: 76px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: rgba(21, 26, 36, 0.9);
+  border: 1px solid var(--border-soft);
+}
+
+.topbar-title h2 {
+  margin: 2px 0 0;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  letter-spacing: -0.03em;
+}
+
+.topbar-right {
+  gap: 12px;
+}
+
+.topbar-account {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topbar-account strong,
+.date-chip strong,
+.sidebar-user strong {
+  font-weight: 600;
+}
+
+.date-chip {
+  min-width: 200px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-secondary);
+}
+
+.content-area {
+  width: min(100%, var(--max-content));
+  padding: 24px 24px 40px;
+}
+
+.section-shell {
+  gap: 20px;
+}
+
+.section-head {
+  align-items: center;
+}
+
+.section-head h3 {
+  margin: 8px 0;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  letter-spacing: -0.04em;
+}
+
+.dashboard-grid {
+  grid-template-columns: 1.4fr 1fr 1fr;
+  align-items: stretch;
+}
+
+.dashboard-grid > :nth-child(1) {
+  grid-row: span 2;
+}
+
+.module-grid {
+  grid-template-columns: 1.3fr 0.9fr;
+}
+
+/* sidebar behavior hardening */
+#sidebar-toggle {
+  position: relative;
+  z-index: 150;
+  flex: 0 0 auto;
+}
+
+.sidebar {
+  transition: width 180ms ease, transform 180ms ease;
+  will-change: transform, width;
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  width: var(--sidebar-collapsed-width);
+}
+
+.app-shell.sidebar-collapsed .sidebar .sidebar-brand {
+  justify-content: center;
+}
+
+.app-shell.sidebar-collapsed .sidebar .nav-btn {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.app-shell.sidebar-collapsed .sidebar .nav-btn i,
+.app-shell.sidebar-collapsed .sidebar .nav-btn svg {
+  margin: 0;
+}
+
+.app-shell.sidebar-collapsed .sidebar .sidebar-footer {
+  display: none;
+}
+
+body.sidebar-mobile-open {
+  overflow: hidden;
+}

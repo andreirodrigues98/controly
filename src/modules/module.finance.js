@@ -877,7 +877,12 @@ export function createFinanceModule() {
       entry.paymentDate ? `${entry.flowType === 'income' ? 'Recebimento' : 'Pagamento'}: ${formatShortDateLabel(entry.paymentDate)}` : '',
     ].filter(Boolean);
     return `
-      <article class="finance-entry-card kanban-card ${done ? 'is-complete' : ''}" ${entry.virtual ? '' : 'draggable="true"'} data-finance-id="${escapeHtml(entry.id)}" data-search-id="finance:${escapeHtml(entry.id)}">
+      <article class="finance-entry-card kanban-card ${done ? 'is-complete' : ''}" ${entry.virtual ? '' : 'draggable="true"'} data-finance-id="${escapeHtml(entry.id)}" data-search-id="finance:${escapeHtml(entry.id)}" data-finance-expanded="false">
+        <div class="finance-mobile-compact">
+          <button type="button" class="finance-compact-title" data-finance-expand="${escapeHtml(entry.id)}" aria-expanded="false" aria-label="Mostrar detalhes de ${escapeHtml(entry.title)}">${escapeHtml(entry.title)}</button>
+          ${entry.virtual ? '' : `<button type="button" class="kanban-card-handle finance-compact-drag" data-touch-handle aria-label="Arraste ${escapeHtml(entry.title)} para outra coluna">${icon('grip-vertical')}</button>`}
+        </div>
+        <div class="finance-mobile-extra">
         <div class="finance-entry-topline">
           <div class="finance-entry-title-group">
             <strong class="finance-entry-title">${escapeHtml(entry.title)}</strong>
@@ -904,6 +909,7 @@ export function createFinanceModule() {
             <button type="button" class="icon-btn small" data-action="duplicate-entry" data-id="${entry.id}">${icon('copy-plus', 'Duplicar lançamento')}</button><button type="button" class="icon-btn small" data-action="edit-entry" data-id="${entry.id}">${icon('pencil-line', 'Editar lançamento')}</button>
             <button type="button" class="icon-btn small" data-action="delete-entry" data-id="${entry.id}">${icon('trash-2', 'Excluir lançamento')}</button>
           </div>
+        </div>
         </div>
       </article>
     `;
@@ -976,6 +982,7 @@ export function createFinanceModule() {
   function render(state) {
     if (!root) return;
     const scrollPositions = [...root.querySelectorAll('.finance-kanban-board')].map(board => board.scrollLeft);
+    const expandedIds = new Set([...root.querySelectorAll('[data-finance-expanded="true"]')].map(card => card.dataset.financeId));
     const rawCurrentEntries = getNormalizedEntriesForMonth(state, selectedMonth);
     const currentEntries = applyFinanceFilters(rawCurrentEntries);
     const totals = {
@@ -1055,6 +1062,11 @@ export function createFinanceModule() {
       </div>
     `;
     root.querySelectorAll('.finance-kanban-board').forEach((board, index) => { board.scrollLeft = scrollPositions[index] || 0; });
+    if (expandedIds.size) root.querySelectorAll('[data-finance-id]').forEach(card => {
+      if (!expandedIds.has(card.dataset.financeId)) return;
+      card.dataset.financeExpanded = 'true';
+      card.querySelector('[data-finance-expand]')?.setAttribute('aria-expanded', 'true');
+    });
     refreshIcons(root);
   }
 
@@ -1080,6 +1092,7 @@ export function createFinanceModule() {
     enableTouchKanban(root, {
       cardSelector: '[data-finance-id]', laneSelector: '[data-finance-lane]',
       boardSelector: '.finance-kanban-board',
+      canDrop: (card, lane) => allowedFinanceDrop(getEntryById(card.dataset.financeId), lane.dataset.financeLane),
       onDrop: (card, lane) => moveFinanceToColumn(card.dataset.financeId, lane.dataset.financeLane),
     });
     let draggedFinanceId = null;
@@ -1173,6 +1186,17 @@ export function createFinanceModule() {
       if (event.target.id?.startsWith('finance-filter-') || event.target.id === 'finance-month') render(window.__CONTROLY_STATE);
     });
     root.addEventListener('click', async (event) => {
+      const expander = event.target.closest('[data-finance-expand]');
+      if (expander) {
+        const id = expander.dataset.financeExpand;
+        const open = expander.getAttribute('aria-expanded') !== 'true';
+        root.querySelectorAll('[data-finance-expand]').forEach((button) => {
+          if (button.dataset.financeExpand !== id) return;
+          button.setAttribute('aria-expanded', String(open));
+          button.closest('[data-finance-id]')?.setAttribute('data-finance-expanded', String(open));
+        });
+        return;
+      }
       const scrollButton = event.target.closest('[data-finance-scroll]');
       if (scrollButton) {
         const board = scrollButton.closest('.finance-month-body')?.querySelector('.finance-kanban-board');

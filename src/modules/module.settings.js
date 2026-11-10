@@ -4,6 +4,7 @@ import { saveProfileAvatar } from '../services/store.js';
 import { showToast, updateUserBadge } from '../ui/ui.js';
 import { logout } from '../services/auth.js';
 import { downloadOwnDataExport } from '../services/account-export.js';
+import { adminCall, adminErrorMessage, isAdminBackendEnabled } from '../admin/admin-client.js';
 
 /** Configurações de conta: sem intervenções automáticas na senha. */
 export function createSettingsModule() {
@@ -39,6 +40,32 @@ export function createSettingsModule() {
         }
       });
       root.addEventListener('click', async (event) => {
+        if (event.target.closest('[data-admin-verify]')) {
+          const button = root.querySelector('[data-admin-verify]');
+          const message = root.querySelector('[data-admin-verification-result]');
+          if (!button || !message || button.disabled) return;
+          button.disabled = true;
+          message.textContent = 'Verificando seu acesso...';
+          try {
+            if (!isAdminBackendEnabled()) throw new Error('A administração ainda não está habilitada nesta instalação. Ative a integração e atualize a página.');
+            const result = await adminCall('voraWhoAmI');
+            if (!result?.admin) throw new Error('A conta não tem acesso administrativo.');
+            message.textContent = 'Sua conta está autorizada para a Administração VORA.';
+            window.dispatchEvent(new CustomEvent('controly:admin-verified', {detail: {authorized:true}}));
+            const open = root.querySelector('[data-admin-open]');
+            if (open) open.hidden = false;
+          } catch (error) {
+            message.textContent = error?.status ? adminErrorMessage(error) : error?.message || adminErrorMessage(error);
+          } finally { if (button.isConnected) button.disabled = false; }
+          return;
+        }
+        if (event.target.closest('[data-admin-copy-uid]')) {
+          const value = window.__CONTROLY_STATE?.user?.uid || '';
+          if (!value) return;
+          try { await navigator.clipboard.writeText(value); showToast('Identificador da conta copiado.'); }
+          catch {showToast('Selecione e copie o identificador exibido.', 'error');}
+          return;
+        }
         if (event.target.closest('#settings-data-export')) {
           const button = root.querySelector('#settings-data-export');
           if (button?.disabled) return;
@@ -128,6 +155,16 @@ export function createSettingsModule() {
               </div>
             </section>
           </div>
+          ${new URLSearchParams(window.location.search).get('admin') === '1' ? `
+          <section class="panel settings-card settings-admin-check" aria-label="Verificar acesso administrativo">
+            <div class="settings-card-title"><i data-lucide="shield-check" aria-hidden="true"></i><h4>Acesso à Administração VORA</h4></div>
+            <p class="settings-description">Verifique se esta conta tem permissão para gerenciar os usuários do Controly.</p>
+            <p class="settings-card-help">Identificador da conta conectada (UID):</p>
+            <div class="admin-uid-row"><code>${escapeHtml(state.user?.uid || '')}</code><button type="button" class="btn btn-secondary" data-admin-copy-uid>Copiar</button></div>
+            <p class="settings-description" data-admin-verification-result role="status">Use Verificar meu acesso para consultar a autorização da conta.</p>
+            <div class="settings-legal-links"><button type="button" class="btn btn-primary" data-admin-verify>Verificar meu acesso</button>
+              <button type="button" class="btn btn-secondary" data-admin-open data-go-section="admin" hidden>Abrir Administração VORA</button></div>
+          </section>` : ''}
           <section class="panel settings-card settings-legal-card" aria-label="Documentos e privacidade">
             <div class="settings-card-title"><i data-lucide="file-check-2" aria-hidden="true"></i><h4>Documentos e privacidade</h4></div>
             <p class="settings-description">Consulte como o Controly funciona e como seus dados pessoais são tratados.</p>

@@ -109,6 +109,14 @@ function isAdminUid(uid, env) {
 }
 function corsHeaders(origin) { return {'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-headers':'Authorization, Content-Type','access-control-allow-methods':'GET, POST, OPTIONS','access-control-max-age':'600'}; }
 function json(data, status=200, origin='') {return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...(origin?corsHeaders(origin):{})}});}
+async function accountSession(env, uid) {
+  cleanUid(uid);
+  const record = await firestoreRequest(env, 'GET', `/accountAccess/${uid}`);
+  const status = firestoreValue(record?.fields?.status);
+  // Compatibilidade de migração: contas ainda sem accountAccess estão ativas.
+  // Só o backend autenticado pode responder sobre o estado da sessão.
+  return { status: status === 'suspended' ? 'suspended' : 'active', admin: isAdminUid(uid, env) };
+}
 async function listAccounts(env, pageToken='', actorUid='') {
   if (pageToken.length > 512) invalid(400,'Página inválida.');
   const params = new URLSearchParams({pageSize:'30'});
@@ -124,6 +132,18 @@ async function listAccounts(env, pageToken='', actorUid='') {
       isSuperAdmin: isAdminUid(uid,env),isSelf: uid === actorUid };
   }));
   return {accounts,nextPageToken:result?.nextPageToken || ''};
+}
+async function listAudit(env) {
+  // Dados de auditoria são acessíveis somente à API com UID administrativo autorizado.
+  const params = new URLSearchParams({pageSize:'30', orderBy:'at desc'});
+  const result = await firestoreRequest(env,'GET',`/adminAudit?${params}`);
+  const events = (result?.documents || []).map(item => ({
+    actorUid: firestoreValue(item.fields?.actorUid) || '',
+    targetUid: firestoreValue(item.fields?.targetUid) || '',
+    action: firestoreValue(item.fields?.action) || '',
+    at: firestoreValue(item.fields?.at) || item.createTime || '',
+  }));
+  return {events};
 }
 async function changeAccess(env, uid, status, operatorUid) {
   cleanUid(uid);
@@ -154,8 +174,14 @@ export default {
       const token = /^Bearer (\S+)$/.exec(request.headers.get('authorization') || '')?.[1];
       if (!token) invalid(401,'Faça login no Controly.');
       const payload = await verifyFirebaseToken(token,project);
+      // Esta rota é acessível a qualquer conta autenticada. Não concede poderes administrativos.
+      if (request.method === 'GET' && url.pathname === '/v1/session') {
+        if (!env.ADMIN_READ_LIMIT || !(await env.ADMIN_READ_LIMIT.limit({key:payload.sub})).success) invalid(429,'Limite de consultas atingido.');
+        return json(await accountSession(env, payload.sub),200,origin);
+      }
       if (!isAdminUid(payload.sub,env)) invalid(403,'Acesso administrativo não autorizado.');
       const action = request.method === 'GET' && url.pathname === '/v1/me' ? 'me'
+        : request.method === 'GET' && url.pathname === '/v1/audit' ? 'audit'
         : request.method === 'GET' && url.pathname === '/v1/accounts' ? 'list'
         : request.method === 'POST' && url.pathname === '/v1/accounts/access' ? 'change' : null;
       if (!action) invalid(404,'Operação não encontrada.');
@@ -164,6 +190,7 @@ export default {
       if (!binding || !(await binding.limit({key:payload.sub})).success) invalid(429,'Limite de consultas atingido ou proteção indisponível.');
       if (action === 'me') return json({admin:true},200,origin);
       if (action === 'list') return json(await listAccounts(env,url.searchParams.get('pageToken') || '',payload.sub),200,origin);
+      if (action === 'audit') return json(await listAudit(env),200,origin);
       if (Number(request.headers.get('content-length') || 0) > 8192) invalid(413,'Requisição muito grande.');
       let body;
       try { body = await request.json(); } catch { invalid(400,'Dados inválidos.'); }

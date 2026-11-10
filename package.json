@@ -1,11 +1,12 @@
 {
   "name": "controly",
-  "version": "2.0.6",
+  "version": "2.0.8",
   "private": true,
   "type": "module",
   "scripts": {
     "config:development": "node scripts/generate-firebase-config.js --env=development",
     "check": "node scripts/check-project.js",
+    "test": "node --test tests/*.test.js",
     "build:production": "node scripts/build-pages.js",
     "admin:deploy": "npm run deploy --prefix worker-admin"
   }

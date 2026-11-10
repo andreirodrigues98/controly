@@ -1,7 +1,7 @@
 import { login, logout, watchAuth, requestPasswordReset, changeOwnPassword } from './services/auth.js';
 import { ClientThrottle, AUTH_ACTION_POLICIES } from './security/client-throttle.js';
 import { firebaseIsConfigured, db } from './services/firebase.js';
-import { doc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { createAdminModule } from './admin/admin-module.js';
 import { isAdminBackendEnabled, isWorkerAdmin, adminCall } from './admin/admin-client.js';
 import { observeSectionRender } from './services/performance-diagnostics.js';
@@ -86,10 +86,17 @@ const moduleMap = new Map(modules.map((module) => [module.id, module]));
 let adminAllowed = false;
 let unsubscribeAccess = null;
 const adminNavButton = document.getElementById('nav-vora-admin');
+window.addEventListener('controly:admin-verified', (event) => {
+  if (!state.user || event.detail?.authorized !== true) return;
+  // O controle real permanece no Worker; esta ação só torna o menu visível.
+  adminAllowed = true;
+  if (adminNavButton) adminNavButton.hidden = false;
+});
 
 function hideAdminArea() {
   adminAllowed = false;
   if (adminNavButton) adminNavButton.hidden = true;
+  moduleMap.get('admin')?.clear();
   if (state.currentSection === 'admin') navigate('dashboard');
 }
 
@@ -97,27 +104,24 @@ async function validateAccountAccess(user) {
   if (unsubscribeAccess) { unsubscribeAccess(); unsubscribeAccess = null; }
   hideAdminArea();
   if (!isAdminBackendEnabled()) return;
-  // Em modo administrativo, a conta precisa estar provisionada no backend ANTES da leitura de dados.
-  const ref = doc(db, 'accountAccess', user.uid);
-  const current = await getDoc(ref);
-  if (current.exists() && current.data()?.status !== 'active') {
-    throw new Error('Acesso da conta não ativado ou suspenso.');
-  }
-  if (isWorkerAdmin()) {
-    try { adminAllowed = (await adminCall('voraWhoAmI')).admin === true; }
-    catch { adminAllowed = false; }
-  } else {
-    const token = await user.getIdTokenResult(true);
-    adminAllowed = token.claims.voraAdmin === true;
-  }
+  // A sessão é verificada pelo Worker, inclusive quando as regras antigas ainda não
+  // permitem ler accountAccess no cliente. Assim o Admin pode ser implantado sem
+  // bloquear acidentalmente todas as contas durante a migração.
+  const session = await adminCall('voraAccountSession');
+  if (session.status !== 'active') throw new Error('Acesso suspenso.');
+  adminAllowed = session.admin === true;
   if (adminNavButton) adminNavButton.hidden = !adminAllowed;
+  // Com as regras atualizadas, o listener oferece bloqueio quase imediato.
+  // Caso as regras antigas não exponham accountAccess, o Worker ainda valida
+  // a sessão no login e nos retornos à aplicação.
+  const ref = doc(db, 'accountAccess', user.uid);
   unsubscribeAccess = onSnapshot(ref, (snapshot) => {
     if (snapshot.exists() && snapshot.data()?.status !== 'active') {
       stopSubscriptions();
       logout().catch(console.error);
       showToast('Seu acesso foi encerrado. Consulte o suporte.', 'error');
     }
-  }, (error) => console.warn('Não foi possível atualizar o status de acesso:', error?.code || 'erro'));
+  }, (error) => console.warn('Sincronização do acesso indisponível:', error?.code || 'erro'));
 }
 const COLLECTION_RENDER_TARGETS = {
   activities: ['activities', 'dashboard', 'calendar', 'search'],
@@ -378,9 +382,30 @@ changeForm?.addEventListener('submit', async (event) => {
 
 bindNavigation(navigate);
 setupDateLabel();
-window.addEventListener('focus', renderTimeSensitiveViews);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) renderTimeSensitiveViews(); });
-setInterval(renderTimeSensitiveViews, 60000);
+let lastAccessReviewAt = 0;
+async function revalidateSessionInBackground() {
+  if (!state.user || !isWorkerAdmin()) return;
+  if (Date.now() - lastAccessReviewAt < 60000) return;
+  lastAccessReviewAt = Date.now();
+  const uid = state.user.uid;
+  try {
+    const access = await adminCall('voraAccountSession');
+    if (state.user?.uid !== uid) return;
+    if (access.status !== 'active') {
+      stopSubscriptions();
+      await logout();
+      showToast('Sua sessão foi encerrada. Consulte o suporte.', 'error');
+      return;
+    }
+    adminAllowed = access.admin === true;
+    if (adminNavButton) adminNavButton.hidden = !adminAllowed;
+  } catch (error) {
+    console.warn('Não foi possível revalidar o acesso neste momento:', error?.status || 'rede');
+  }
+}
+window.addEventListener('focus', () => {renderTimeSensitiveViews(); void revalidateSessionInBackground();});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) {renderTimeSensitiveViews(); void revalidateSessionInBackground();} });
+setInterval(() => {renderTimeSensitiveViews(); void revalidateSessionInBackground();}, 60000);
 logoutButtons.forEach((button) => button.addEventListener('click', handleLogout));
 
 loginForm.addEventListener('submit', async (event) => {
@@ -411,6 +436,7 @@ if (!firebaseIsConfigured) {
     try {
       if (user) {
         await validateAccountAccess(user);
+        lastAccessReviewAt = Date.now();
         setUser(user);
         state.profile = await ensureUserProfile(user);
         showAppShell();

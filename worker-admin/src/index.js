@@ -108,7 +108,7 @@ function isAdminUid(uid, env) {
   return String(env.VORA_ADMIN_UIDS || '').split(',').map(v=>v.trim()).filter(Boolean).includes(uid);
 }
 function corsHeaders(origin) { return {'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-headers':'Authorization, Content-Type','access-control-allow-methods':'GET, POST, OPTIONS','access-control-max-age':'600'}; }
-function json(data, status=200, origin='') {return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...(origin?corsHeaders(origin):{})}});}
+function json(data, status=200, origin='') {return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY',...(origin?corsHeaders(origin):{})}});}
 async function accountSession(env, uid) {
   cleanUid(uid);
   const record = await firestoreRequest(env, 'GET', `/accountAccess/${uid}`);
@@ -160,6 +160,35 @@ async function changeAccess(env, uid, status, operatorUid) {
   ]});
   return {success:true,status};
 }
+
+export async function readAdminJson(request, maxBytes = 8192) {
+  if (!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get('content-type') || '')) invalid(415, 'Envie dados no formato JSON.');
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (declared > maxBytes) invalid(413, 'Requisição muito grande.');
+  const reader = request.body?.getReader();
+  if (!reader) invalid(400, 'Dados inválidos.');
+  let total = 0;
+  const chunks = [];
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) { await reader.cancel(); invalid(413, 'Requisição muito grande.'); }
+      chunks.push(value);
+    }
+    const combined = new Uint8Array(total);
+    let offset = 0;
+    chunks.forEach(chunk => { combined.set(chunk, offset); offset += chunk.byteLength; });
+    const parsed = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(combined));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) invalid(400, 'Dados inválidos.');
+    return parsed;
+  } catch (error) {
+    if (error instanceof AdminError) throw error;
+    invalid(400, 'Dados inválidos.');
+  } finally { try { reader.releaseLock(); } catch {} }
+}
+
 export default {
   async fetch(request,env) {
     const origin = request.headers.get('origin') || '';
@@ -180,6 +209,7 @@ export default {
         return json(await accountSession(env, payload.sub),200,origin);
       }
       if (!isAdminUid(payload.sub,env)) invalid(403,'Acesso administrativo não autorizado.');
+      if ((await accountSession(env, payload.sub)).status !== 'active') invalid(403, 'A conta está suspensa.');
       const action = request.method === 'GET' && url.pathname === '/v1/me' ? 'me'
         : request.method === 'GET' && url.pathname === '/v1/audit' ? 'audit'
         : request.method === 'GET' && url.pathname === '/v1/accounts' ? 'list'
@@ -191,10 +221,7 @@ export default {
       if (action === 'me') return json({admin:true},200,origin);
       if (action === 'list') return json(await listAccounts(env,url.searchParams.get('pageToken') || '',payload.sub),200,origin);
       if (action === 'audit') return json(await listAudit(env),200,origin);
-      if (Number(request.headers.get('content-length') || 0) > 8192) invalid(413,'Requisição muito grande.');
-      let body;
-      try { body = await request.json(); } catch { invalid(400,'Dados inválidos.'); }
-      if (!body || typeof body !== 'object') invalid(400,'Dados inválidos.');
+      const body = await readAdminJson(request);
       return json(await changeAccess(env,body.uid,body.status,payload.sub),200,origin);
     } catch(error) {
       return json({error:error instanceof AdminError ? error.message : 'Operação indisponível.'},error instanceof AdminError ? error.status : 503,origin);

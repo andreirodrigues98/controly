@@ -1,29 +1,27 @@
 import { closeModal, createEmptyState, openModal } from '../ui/ui.js';
 import { buildCreditCardAlerts, buildDashboardSnapshot, getActivityDefinitions, getActivityOccurrences } from '../domain/domain.js';
 import { addDays, dateKey, escapeHtml, formatCurrency, formatDate, toDate } from '../shared/utils.js';
+import { scopedKey } from '../security/client-storage.js';
 
-const STORAGE_KEY = 'controly.dashboard.widgets';
+const STORAGE_KEY = 'controly.dashboard.widgets.v2';
+const DEFAULT_WIDGETS = Object.freeze({activities:true,goals:true,studies:true,finance:true,reading:true,calendar:true,workouts:true});
 const PRIORITY_LABEL = { high: 'alta', medium: 'média', low: 'baixa' };
 
 function loadDashboardPreference() {
   try {
-    const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
-    return {
-      activities: stored.activities ?? true,
-      goals: stored.goals ?? true,
-      studies: stored.studies ?? true,
-      finance: stored.finance ?? true,
-      reading: stored.reading ?? true,
-      calendar: stored.calendar ?? true,
-      workouts: stored.workouts ?? true,
-    };
-  } catch {
-    return { activities: true, goals: true, studies: true, finance: true, reading: true, calendar: true, workouts: true };
-  }
+    const key = scopedKey(STORAGE_KEY);
+    if (!key) return {...DEFAULT_WIDGETS};
+    const stored = JSON.parse(window.localStorage.getItem(key) || '{}');
+    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return {...DEFAULT_WIDGETS};
+    return Object.fromEntries(Object.keys(DEFAULT_WIDGETS).map(name => [name, typeof stored[name] === 'boolean' ? stored[name] : true]));
+  } catch { return {...DEFAULT_WIDGETS}; }
 }
 
 function saveDashboardPreference(preference) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preference));
+  try {
+    const key = scopedKey(STORAGE_KEY);
+    if (key) window.localStorage.setItem(key, JSON.stringify(preference));
+  } catch { /* O painel deve continuar funcional com armazenamento desativado. */ }
 }
 
 function tomorrowKey(baseDate = new Date()) {
@@ -154,7 +152,8 @@ function getOverdueFinanceItems(cardAlerts = []) {
 
 export function createDashboardModule() {
   let root;
-  let preference = loadDashboardPreference();
+  let preference = {...DEFAULT_WIDGETS};
+  let preferenceOwnerUid = null;
 
   function openWidgetConfig() {
     openModal({
@@ -305,6 +304,11 @@ export function createDashboardModule() {
 
   function render(state) {
     if (!root) return;
+    const uid = state.user?.uid || null;
+    if (uid !== preferenceOwnerUid) {
+      preference = loadDashboardPreference();
+      preferenceOwnerUid = uid;
+    }
     const snapshot = buildDashboardSnapshot(state);
     const cardAlerts = buildCreditCardAlerts(state);
     const doneToday = snapshot.todayActivities.filter((item) => item.occurrenceDone).length;
@@ -499,6 +503,13 @@ export function createDashboardModule() {
           <div><span class="eyebrow">Visão geral</span><h3>Painel inicial</h3><p class="module-subtitle">Veja em um só lugar suas tarefas, itens da agenda, metas e lembretes importantes do dia.</p></div>
           <div class="section-actions"><button class="btn btn-secondary" type="button" data-action="customize-dashboard">Escolher blocos do painel</button><button class="btn btn-primary" type="button" data-go-section="activities">Ver minhas atividades</button></div>
         </div>
+        <nav class="dashboard-quick-actions" aria-label="Criar rapidamente">
+          <span class="dashboard-quick-label">Adicionar rapidamente</span>
+          <button type="button" class="dashboard-quick-btn" data-dashboard-create="activities"><i data-lucide="check-square" aria-hidden="true"></i><span>Atividade</span></button>
+          <button type="button" class="dashboard-quick-btn" data-dashboard-create="goals"><i data-lucide="target" aria-hidden="true"></i><span>Meta</span></button>
+          <button type="button" class="dashboard-quick-btn" data-dashboard-create="notes"><i data-lucide="sticky-note" aria-hidden="true"></i><span>Nota</span></button>
+          <button type="button" class="dashboard-quick-btn" data-dashboard-create="finance"><i data-lucide="wallet" aria-hidden="true"></i><span>Lançamento</span></button>
+        </nav>
         <div class="compact-stat-grid mobile-rail mobile-rail-cards">
           <article class="stat-card"><span class="label">Hoje</span><strong>${snapshot.todayLabel}</strong></article>
           <article class="stat-card"><span class="label">Atividades de hoje</span><strong>${doneToday}/${totalToday}</strong><div class="progress"><span style="width:${completionToday}%"></span></div></article>
@@ -518,6 +529,11 @@ export function createDashboardModule() {
   function init(element) {
     root = element;
     root.addEventListener('click', (event) => {
+      const quickCreate = event.target.closest('[data-dashboard-create]');
+      if (quickCreate) {
+        window.dispatchEvent(new CustomEvent('controly:create-quick', { detail: { section: quickCreate.dataset.dashboardCreate } }));
+        return;
+      }
       const workoutButton = event.target.closest('[data-action="new-workout-from-dashboard"]');
       if (workoutButton) {
         const opened = window.__CONTROLY_OPENERS?.workouts?.({ action: 'new-workout' });

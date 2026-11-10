@@ -1,4 +1,4 @@
-# Controly 2.0.8
+# Controly 2.0.9
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
 
@@ -89,3 +89,20 @@ Apenas `README.md` é usado como documentação Markdown no projeto.
 ## Quadros no celular
 
 Em **Finanças**, os cartões exibem somente o nome por padrão: toque no nome para abrir os detalhes, valor e ações. Arraste pela alça ao lado do nome para mover entre as colunas. Durante o movimento, o quadro acompanha o dedo horizontalmente e continua rolando ao manter o dedo próximo à borda. Uma operação financeira ainda exige confirmação e não permite converter despesa em receita pelo arrasto. O mesmo movimento assistido atende ao quadro de **Leitura**.
+
+## Refinamentos 2.0.9
+
+O Painel oferece atalhos para criar atividades, metas, notas e lançamentos sem procurar o módulo primeiro. Preferências dos blocos do painel são armazenadas separadamente por **conta, projeto e ambiente** no navegador. Em Configurações, as orientações repetidas foram substituídas por ações de proteção de conta.
+
+O Worker passou a rejeitar operações administrativas de contas suspensas, limita o tamanho **real** das solicitações JSON e inclui cabeçalhos de proteção adicionais. Para usar esse backend atualizado é preciso publicar novamente, na raiz do projeto: `npm run admin:deploy`. O GitHub Actions executa os testes locais antes da publicação.
+
+### Pendências de segurança a validar antes da comercialização
+
+1. **Regras publicadas do Firestore:** comparar o conteúdo do Console com `firestore.rules`, testar acesso entre contas e negação de contas suspensas usando o emulador. Não substituir as regras ativas sem backup e testes. Na versão atual, contas sem documento em `accountAccess` são tratadas como ativas por compatibilidade; após migrar todas, recomendamos retirar essa exceção para adotar bloqueio por padrão.
+2. **App Check:** registrar o domínio em Firebase App Check (reCAPTCHA Enterprise), configurar a chave pública de site por ambiente, acompanhar as métricas e só então ativar enforcement. Antes disso, ativá-lo de imediato pode bloquear clientes legítimos.
+3. **Admin:** verificar token, permissões, revogação de acesso e proteção por múltiplos usuários; considerar MFA/2FA para contas administrativas. A revogação imediata de tokens de Authentication ainda exige mecanismo próprio. Não confundir o bloqueio de dados no Firestore com desabilitar o login no Authentication.
+4. **Backups:** configurar e testar recuperação real dos documentos em ambiente isolado. Relatório HTML não é backup restaurável.
+5. **Segredos e cobrança:** limitar IAM da conta de serviço, restringir criação de novas chaves, fazer rotação se houver exposição, ativar alertas de quota e custos. Auditar dependências e revisar alertas de segurança.
+6. **Privacidade e experiência:** confirmar identificação do controlador e contato de privacidade nas páginas legais, testar exportação e solicitações de exclusão, garantir acessibilidade com teclado e celular físico.
+
+A aprovação dos testes automatizados não substitui a homologação com Firebase e Cloudflare reais. Não existe atribuição automática de nota 9,5 nem garantia de lançamento após esta atualização.

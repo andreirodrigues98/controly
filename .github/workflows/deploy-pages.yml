@@ -33,6 +33,9 @@ jobs:
         run: |
           npm run check
 
+      - name: Testar fluxos e protecoes locais
+        run: npm test
+
       - name: Conferir configuracao Firebase no GitHub
         shell: bash
         env:

@@ -15908,3 +15908,30 @@ html[data-theme] .search-palette-dialog {max-width: min(900px, calc(100vw - 24px
     color:inherit !important; padding:4px !important; touch-action:none;
   }
 }
+
+
+/* 2.0.9 — Acesso rápido no painel: pouca informação, ações claras. */
+.dashboard-quick-actions {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  margin: 0 0 18px; padding: 11px 14px;
+  border: 1px solid rgba(177, 199, 245, .23);
+  background: rgba(154, 180, 238, .075);
+  border-radius: 18px; backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.dashboard-quick-label { font-size: .76rem; font-weight: 650; color: var(--text-muted, #abb8ce); margin-right: 6px; }
+.dashboard-quick-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid rgba(187, 205, 238, .27); border-radius: 12px;
+  background: rgba(196, 209, 239, .10); color: inherit;
+  padding: 9px 12px; font: inherit; font-weight: 600; font-size: .87rem;
+  cursor: pointer; min-height: 42px; transition: background .16s ease, border-color .16s ease;
+}
+.dashboard-quick-btn:hover, .dashboard-quick-btn:focus-visible { background: rgba(196, 209, 239, .18); border-color: rgba(214, 228, 255, .50); }
+.dashboard-quick-btn svg, .dashboard-quick-btn i { width: 17px; height: 17px; }
+@media (max-width: 660px) {
+ .dashboard-quick-actions { padding: 10px; gap: 8px; }
+ .dashboard-quick-label { width: 100%; margin: 0 0 2px; }
+ .dashboard-quick-btn { flex: 1 1 calc(50% - 8px); min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .dashboard-quick-btn { transition: none; } }

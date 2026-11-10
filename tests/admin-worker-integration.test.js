@@ -20,6 +20,7 @@ test('API Worker permite lista e suspensão autenticadas e nega conta sem permis
   const pem=`-----BEGIN PRIVATE KEY-----\n${pkcs8.match(/.{1,64}/g).join('\n')}\n-----END PRIVATE KEY-----\n`;
   const calls=[];
   let suspendRegularUser = false;
+  let suspendAdmin = false;
   const oldFetch=globalThis.fetch;
   globalThis.fetch=async (url,opts={})=>{
     const name=String(url);calls.push({name,opts});
@@ -30,7 +31,7 @@ test('API Worker permite lista e suspensão autenticadas e nega conta sem permis
     if (name.endsWith('/token')) return Response.json({access_token:'mock-google-oauth',expires_in:3600});
     if (name.endsWith('/documents/users?pageSize=30')) return Response.json({documents:[{name:`projects/${project}/databases/(default)/documents/users/normaluser123`,fields:{email:{stringValue:'cliente@example.test'},displayName:{stringValue:'Cliente'}}}]});
     if (name.endsWith('/documents/accountAccess/normaluser123')) return suspendRegularUser ? Response.json({fields:{status:{stringValue:'suspended'}}}) : new Response('',{status:404});
-    if (name.endsWith('/documents/accountAccess/administrator123')) return new Response('',{status:404});
+    if (name.endsWith('/documents/accountAccess/administrator123')) return suspendAdmin ? Response.json({fields:{status:{stringValue:'suspended'}}}) : new Response('',{status:404});
     if (name.includes('/documents/adminAudit?')) return Response.json({documents:[{fields:{action:{stringValue:'suspend'},at:{timestampValue:'2026-11-10T10:00:00Z'},actorUid:{stringValue:'administrator123'},targetUid:{stringValue:'normaluser123'}}}]});
     if (name.endsWith('/documents/users/normaluser123')) return Response.json({fields:{email:{stringValue:'cliente@example.test'}}});
     if (name.endsWith('/documents:commit')) return Response.json({writeResults:[{},{}]});
@@ -74,5 +75,8 @@ test('API Worker permite lista e suspensão autenticadas e nega conta sem permis
     assert.equal(writes[1].currentDocument.exists,false);
     const self=await make('/v1/accounts/access',authed,'POST',{uid:'administrator123',status:'suspended'});
     assert.equal(self.status,403);
+    suspendAdmin = true;
+    const suspendedAdmin = await make('/v1/me', authed);
+    assert.equal(suspendedAdmin.status,403,'Admin suspenso não pode usar endpoints administrativos');
   } finally {globalThis.fetch=oldFetch;}
 });

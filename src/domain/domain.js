@@ -661,10 +661,6 @@ export function getFinanceEntriesForMonth(state, targetMonth = new Date()) {
   return [...explicit, ...missing].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 }
 
-export function saveDashboardPreference(preference) {
-  localStorage.setItem('controly.dashboard.widgets', JSON.stringify(preference));
-}
-
 function buildHolidayAgendaItems(targetDate) {
   const date = toDate(targetDate) || new Date();
   const key = dateKey(date);

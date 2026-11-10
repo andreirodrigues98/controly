@@ -82,6 +82,14 @@ export function createSettingsModule() {
           }
           return;
         }
+        if (event.target.closest('#settings-security-change-password')) {
+          document.getElementById('settings-change-password')?.click();
+          return;
+        }
+        if (event.target.closest('#settings-security-logout')) {
+          document.getElementById('settings-logout')?.click();
+          return;
+        }
         if (event.target.closest('#settings-logout')) {
           try { await logout(); } catch (error) { showToast('Não foi possível sair agora. Tente novamente.', 'error'); }
           return;
@@ -146,13 +154,10 @@ export function createSettingsModule() {
               <button id="settings-data-export" class="btn btn-primary" type="button">Baixar relatório dos meus dados</button>
             </section>
             <section class="panel settings-card">
-              <div class="settings-card-title"><i data-lucide="compass" aria-hidden="true"></i><h4>Comece por aqui</h4></div>
-              <p class="settings-description">Organize sua rotina no seu ritmo. Você pode começar com uma atividade e acrescentar outros detalhes depois.</p>
-              <div class="settings-onboarding-list">
-                <button type="button" data-go-section="activities">Criar uma atividade <i data-lucide="arrow-right" aria-hidden="true"></i></button>
-                <button type="button" data-go-section="goals">Definir uma meta <i data-lucide="arrow-right" aria-hidden="true"></i></button>
-                <button type="button" data-go-section="reading">Organizar meus livros <i data-lucide="arrow-right" aria-hidden="true"></i></button>
-              </div>
+              <div class="settings-card-title"><i data-lucide="shield-check" aria-hidden="true"></i><h4>Proteja sua conta</h4></div>
+              <p class="settings-description">Use uma senha exclusiva para o Controly e mantenha o acesso ao seu e-mail de recuperação.</p>
+              <p class="settings-card-help">Se compartilhar o computador, saia da conta ao terminar. O Controly mantém a sessão ativa no navegador até você sair.</p>
+              <div class="settings-legal-links"><button type="button" class="btn btn-secondary" id="settings-security-change-password">Alterar senha</button><button type="button" class="btn btn-secondary" id="settings-security-logout">Sair da conta</button></div>
             </section>
           </div>
           ${new URLSearchParams(window.location.search).get('admin') === '1' ? `

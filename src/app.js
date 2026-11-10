@@ -418,6 +418,22 @@ onStateChange((changeKey) => {
   updateUserBadge(state.user, state.profile);
 });
 
+const QUICK_CREATE_SELECTORS = Object.freeze({
+  activities: '[data-action="new-activity"]',
+  goals: '[data-action="new-goal"]',
+  notes: '[data-action="new-note"]',
+  finance: '[data-action="new-entry"]',
+});
+window.addEventListener('controly:create-quick', async (event) => {
+  if (!state.user) return;
+  const section = event.detail?.section;
+  if (!Object.hasOwn(QUICK_CREATE_SELECTORS, section)) return;
+  if (!(await confirmLeaveOpenModal())) return;
+  navigate(section);
+  // A navegação renderiza a seção imediatamente antes de abrir o cadastro.
+  document.querySelector(`#section-${section} ${QUICK_CREATE_SELECTORS[section]}`)?.click();
+});
+
 document.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-go-section]');
   if (!button) return;

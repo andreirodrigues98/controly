@@ -15816,3 +15816,12 @@ html[data-theme] .search-palette-dialog {max-width: min(900px, calc(100vw - 24px
   .finance-entry-value-group { align-items:flex-start; }
   .finance-status-move { flex:1; min-width:108px; }
 }
+
+/* Entrada para os documentos legais: login e configuracoes */
+.auth-legal-links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(193,210,255,.17);font-size:.84rem;color:var(--muted,#aab8ce)}
+.auth-legal-links a{text-decoration:underline;text-decoration-color:rgba(185,205,247,.42);text-underline-offset:3px}
+.settings-legal-card{margin-top:18px}
+.settings-legal-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.settings-legal-links a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;min-height:44px}
+.settings-legal-links a i{width:16px;height:16px}
+@media(max-width:520px){.auth-legal-links{gap:8px}.settings-legal-links{flex-direction:column}.settings-legal-links a{justify-content:center;width:100%}}

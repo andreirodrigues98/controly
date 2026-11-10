@@ -10,6 +10,7 @@ const required = [
   'src/state/state.js', 'src/services/firebase.js', 'src/services/store.js',
   'worker-admin/src/index.js', 'worker-admin/wrangler.jsonc',
   'firestore.rules', '.gitignore', '.github/workflows/deploy-pages.yml',
+  'termos.html', 'privacidade.html', 'src/styles/legal.css',
 ];
 for (const file of required) if (!existsSync(resolve(root, file))) problems.push(`Arquivo ausente: ${file}`);
 

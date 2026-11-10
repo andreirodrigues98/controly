@@ -9,7 +9,7 @@ const destination = resolve(root, 'dist');
 try {
   // Configuracao de producao validada ANTES de criar um pacote publicavel.
   const config = createConfig({ environment: 'production', projectRoot: root, processEnvironment: process.env });
-  const required = ['index.html', 'styles.css', 'manifest.json'];
+  const required = ['index.html', 'termos.html', 'privacidade.html', 'styles.css', 'manifest.json'];
   for (const file of required) if (!existsSync(resolve(root, file))) throw new Error(`Arquivo inexistente: ${file}`);
 
   rmSync(destination, { recursive: true, force: true });

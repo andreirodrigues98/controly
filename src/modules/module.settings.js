@@ -128,6 +128,14 @@ export function createSettingsModule() {
               </div>
             </section>
           </div>
+          <section class="panel settings-card settings-legal-card" aria-label="Documentos e privacidade">
+            <div class="settings-card-title"><i data-lucide="file-check-2" aria-hidden="true"></i><h4>Documentos e privacidade</h4></div>
+            <p class="settings-description">Consulte como o Controly funciona e como seus dados pessoais são tratados.</p>
+            <div class="settings-legal-links">
+              <a class="btn btn-secondary" href="./termos.html" target="_blank" rel="noopener noreferrer">Termos de Uso <i data-lucide="external-link" aria-hidden="true"></i></a>
+              <a class="btn btn-secondary" href="./privacidade.html" target="_blank" rel="noopener noreferrer">Política de Privacidade <i data-lucide="external-link" aria-hidden="true"></i></a>
+            </div>
+          </section>
           <div class="settings-session-actions"><button id="settings-logout" type="button" class="btn btn-secondary">Sair da conta</button></div>
         </div>`;
     },

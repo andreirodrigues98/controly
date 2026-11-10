@@ -1,5 +1,12 @@
 # Controly
 
+## Termos de Uso e Política de Privacidade
+
+As páginas públicas `termos.html` e `privacidade.html` ficam na raiz e são copiadas automaticamente para o GitHub Pages. Elas podem ser abertas sem login e possuem links no login e em Configurações. O CSS dessas páginas é `src/styles/legal.css`.
+
+**ATENÇÃO — revisão antes do lançamento comercial:** as páginas são minutas informativas baseadas nas funcionalidades analisadas, não documentos jurídicos homologados. É necessário confirmar a identificação do responsável legal, canal dedicado para pedidos de privacidade, prazos de retenção, bases legais de cada operação, regiões dos fornecedores, cobrança/cancelamento quando aplicáveis e procedimentos de exclusão. Revise os textos com assessoria jurídica antes de disponibilizar a clientes reais.
+
+
 Aplicativo web de organização pessoal (rotina, estudos, leitura, treinos, finanças, metas e notas). Interface com Firebase Authentication e Firestore; administração opcional pelo Cloudflare Worker. Esta é uma **distribuição de código limpa**, não uma homologação de segurança/lançamento.
 
 ## Executar no VS Code (Live Server)

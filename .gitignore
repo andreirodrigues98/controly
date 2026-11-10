@@ -1,0 +1,43 @@
+# Controly — nunca versionar credenciais, configuracoes locais ou dados de usuarios
+.env
+.env.*
+!.env.development.example
+.env.development
+firebase-config.js
+
+# Nega JSON e JSONC desconhecidos por padrao (inclui chaves de servico do Google)
+*.json
+*.jsonc
+!package.json
+!manifest.json
+!worker-admin/package.json
+!worker-admin/wrangler.jsonc
+
+# Chaves em outros formatos
+*.pem
+*.p12
+*.pfx
+*.key
+*.credentials.*
+*serviceAccount*
+*service-account*
+*firebase-adminsdk*
+*private-key*
+
+# Gerados / caches / dependencias / backups / relatorios privados
+node_modules/
+.wrangler/
+.firebase/
+.local/
+.cache/
+dist/
+coverage/
+backups/
+controly-meus-dados-*.html
+relatorio-controly-*.html
+*.csv
+*.xlsx
+*.log
+.DS_Store
+Thumbs.db
+.vscode/

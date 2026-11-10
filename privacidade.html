@@ -1,92 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#10192a" />
-  <meta name="description" content="Saiba quais informações são utilizadas para manter sua conta e seus registros organizados e quais direitos você pode exercer." />
-  <title>Política de Privacidade | Controly</title>
-  <link rel="icon" href="./img/favicon-32x32.png" type="image/png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./src/styles/legal.css" />
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#10192a" name="theme-color"/>
+<meta content="Saiba quais informações são utilizadas para manter sua conta e seus registros organizados e quais direitos você pode exercer." name="description"/>
+<title>Política de Privacidade | Controly</title>
+<link href="./img/favicon-32x32.png" rel="icon" type="image/png"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="./src/styles/legal.css" rel="stylesheet"/>
 </head>
 <body>
-  <header class="legal-header">
-    <a href="./index.html" class="brand" aria-label="Controly — voltar ao aplicativo"><img src="./img/LOGO.png" alt="" /> Controly</a>
-    <nav class="header-links" aria-label="Navegação legal">
-      <a href="./termos.html" >Termos de Uso</a>
-      <a href="./privacidade.html" aria-current="page">Privacidade</a>
-      <a href="./index.html">Voltar ao Controly</a>
-    </nav>
-  </header>
-  <main class="legal-layout" id="conteudo">
-    <nav class="legal-nav" aria-label="Índice desta página">
-      <h2>Nesta página</h2>
-      <ol>
-          <li><a href="#responsavel">Quem responde pelos dados</a></li>
-          <li><a href="#dados">Quais dados são tratados</a></li>
-          <li><a href="#finalidades">Para que usamos os dados</a></li>
-          <li><a href="#fornecedores">Onde os dados são processados</a></li>
-          <li><a href="#acesso">Quem pode acessar os registros</a></li>
-          <li><a href="#conservacao">Por quanto tempo os dados são mantidos</a></li>
-          <li><a href="#direitos">Seus direitos sobre os dados</a></li>
-          <li><a href="#seguranca">Segurança e cuidados</a></li>
-          <li><a href="#navegador">Armazenamento do navegador</a></li>
-          <li><a href="#atualizacoes">Atualizações e contato</a></li>
-      </ol>
-    </nav>
-    <article class="legal-article">
-      <p class="kicker">Controly · Informações legais</p>
-      <h1>Política de Privacidade</h1>
-      <p class="intro">Saiba quais informações são utilizadas para manter sua conta e seus registros organizados e quais direitos você pode exercer.</p>
-      <p class="updated">Última atualização: 10 de novembro de 2026 · Versão inicial sujeita a revisão</p>
-      <section id="responsavel">
-        <h2>1. Quem responde pelos dados</h2>
-        <p>O Controly é disponibilizado sob a marca <strong>VORA</strong>. A VORA é o ponto de contato apresentado ao usuário para dúvidas sobre o uso do serviço e o tratamento de dados pessoais.</p><p>Solicitações poderão ser encaminhadas pelos canais publicados no <a href="https://voralabs.company" target="_blank" rel="noopener noreferrer">site da VORA</a>.</p><div class="note"><p><strong>Informação a completar antes da comercialização:</strong> identificação formal do responsável pelo tratamento e canal específico de atendimento às solicitações de privacidade.</p></div>
-      </section>
-      <section id="dados">
-        <h2>2. Quais dados são tratados</h2>
-        <ul><li><strong>Conta:</strong> e-mail, identificador de usuário, informações de login e dados técnicos de sessão, tratados com apoio do Firebase Authentication.</li><li><strong>Perfil:</strong> nome exibido e foto de perfil opcional, quando enviada.</li><li><strong>Conteúdos cadastrados:</strong> atividades, agenda, metas, matérias e sessões de estudos, livros, treinos, notas e dados financeiros que você inserir.</li><li><strong>Informações técnicas:</strong> dados necessários à segurança, prevenção de abuso e diagnóstico de funcionamento, de acordo com as configurações dos fornecedores utilizados.</li><li><strong>Preferências locais:</strong> informações técnicas e rascunhos podem ser guardados no armazenamento do navegador para facilitar o uso.</li></ul><p>Não solicitamos número completo de cartão nem código CVV para o controle de despesas. Evite inserir esses dados em campos de texto livre.</p>
-      </section>
-      <section id="finalidades">
-        <h2>3. Para que usamos os dados</h2>
-        <ul><li>Criar e manter o acesso à sua conta e identificar seu perfil.</li><li>Salvar e sincronizar as informações que você decide registrar no aplicativo.</li><li>Exibir resumos, listas, calendários, progresso, históricos e relatórios pessoais.</li><li>Prevenir uso indevido, investigar incidentes e administrar acessos.</li><li>Atender solicitações relacionadas ao serviço ou aos direitos dos titulares.</li></ul><p>As bases legais aplicáveis devem corresponder à finalidade de cada tratamento, como execução do serviço contratado, cumprimento de obrigação legal e outras hipóteses previstas na LGPD. Recursos opcionais que exijam consentimento deverão ser tratados conforme sua configuração e a legislação aplicável.</p>
-      </section>
-      <section id="fornecedores">
-        <h2>4. Onde os dados são processados</h2>
-        <p>O Controly utiliza <strong>Firebase Authentication</strong> e <strong>Cloud Firestore</strong> (Google) para autenticação e armazenamento das informações cadastradas. O código também prevê <strong>Cloudflare Workers</strong> para operações administrativas protegidas. A página web pode ser distribuída pelo <strong>GitHub Pages</strong>, e a interface pode carregar recursos de apresentação de fornecedores externos, como fontes e ícones.</p><p>Esses prestadores podem tratar informações técnicas indispensáveis à operação. A localização de processamento e eventuais transferências internacionais dependem das configurações e termos dos serviços efetivamente utilizados.</p>
-      </section>
-      <section id="acesso">
-        <h2>5. Quem pode acessar os registros</h2>
-        <p>O aplicativo organiza os dados por conta de usuário e utiliza autenticação e regras de segurança do Firestore para controlar o acesso. Operações administrativas específicas podem ser executadas por pessoal autorizado, mediante credenciais e registros de auditoria.</p><p>O acesso administrativo deve ser limitado ao necessário para segurança e manutenção do serviço. A efetividade dos controles também depende das regras e permissões efetivamente publicadas na infraestrutura.</p>
-      </section>
-      <section id="conservacao">
-        <h2>6. Por quanto tempo os dados são mantidos</h2>
-        <p>Os dados podem ser conservados enquanto necessários para disponibilizar a conta e suas funcionalidades. Em caso de cancelamento, suspensão ou solicitação de exclusão, a conservação e eliminação observarão requisitos técnicos, obrigações legais e direitos dos titulares, inclusive no que se refere a registros de auditoria e cópias de segurança.</p><p>Os prazos específicos de retenção para contas, lixeira, logs, backups e atendimento ainda precisam ser definidos e confirmados antes da operação comercial. Não há promessa de exclusão instantânea de cópias técnicas.</p>
-      </section>
-      <section id="direitos">
-        <h2>7. Seus direitos sobre os dados</h2>
-        <p>Nos termos da LGPD e conforme o caso, você pode solicitar confirmação do tratamento, acesso, correção, informações sobre compartilhamentos, portabilidade, anonimização, bloqueio ou eliminação de dados tratados irregularmente, além de outros direitos legalmente previstos.</p><p>Em <strong>Configurações</strong>, o Controly oferece um relatório legível de seus próprios registros, quando a função estiver disponível e as permissões permitirem a consulta. Esse relatório não substitui necessariamente a portabilidade técnica nem os canais formais de solicitação.</p><p>Para solicitações de privacidade, utilize os canais disponíveis no <a href="https://voralabs.company" target="_blank" rel="noopener noreferrer">site da VORA</a>. As solicitações serão avaliadas nos termos da legislação aplicável.</p>
-      </section>
-      <section id="seguranca">
-        <h2>8. Segurança e cuidados</h2>
-        <p>O Controly utiliza mecanismos de identificação de conta e controles técnicos de acesso. Nenhum serviço conectado à internet está livre de riscos; por isso, recomendamos uma senha forte, proteção do dispositivo e atenção ao uso em computadores compartilhados.</p><p>Não compartilhe senhas nem cadastre em notas informações sigilosas que não sejam necessárias à sua organização. Caso perceba acesso indevido, entre em contato com a VORA pelos canais oficiais.</p>
-      </section>
-      <section id="navegador">
-        <h2>9. Armazenamento do navegador</h2>
-        <p>O Controly pode utilizar <strong>localStorage</strong> e <strong>sessionStorage</strong> para preferências, estados temporários e rascunhos. Esses recursos não são necessariamente cookies e podem persistir no dispositivo conforme o navegador e a configuração da conta.</p><p>O navegador também poderá fazer requisições aos serviços externos necessários à operação. O uso de ferramentas de publicidade ou análise, se introduzidas futuramente, exigirá revisão desta política e das medidas aplicáveis.</p>
-      </section>
-      <section id="atualizacoes">
-        <h2>10. Atualizações e contato</h2>
-        <p>Esta política poderá ser revisada conforme as funcionalidades, fornecedores, requisitos legais e práticas efetivas de tratamento evoluírem. Alterações relevantes deverão ser comunicadas pelos meios apropriados, com a nova data indicada nesta página.</p><p>Para conhecer as condições de uso, consulte os <a href="./termos.html">Termos de Uso</a>.</p>
-      </section>
-    </article>
-  </main>
-  <footer class="legal-footer">
-    <span>© 2026 Controly · Desenvolvido pela VORA</span>
-    <nav aria-label="Links do rodapé"><a href="./index.html">Aplicativo</a><a href="./termos.html">Termos de Uso</a><a href="https://voralabs.company" target="_blank" rel="noopener noreferrer">Contato VORA</a></nav>
-  </footer>
+<header class="legal-header">
+<a aria-label="Controly — voltar ao aplicativo" class="brand" href="./index.html"><img alt="" src="./img/LOGO.png"/> Controly</a>
+<nav aria-label="Navegação legal" class="header-links">
+<a href="./termos.html">Termos de Uso</a>
+<a aria-current="page" href="./privacidade.html">Privacidade</a>
+<a href="./index.html">Voltar ao Controly</a>
+</nav>
+</header>
+<main class="legal-layout" id="conteudo">
+<nav aria-label="Índice desta página" class="legal-nav">
+<h2>Nesta página</h2>
+<ol><li><a href="#responsavel">Quem somos</a></li><li><a href="#coletados">Quais informações utilizamos</a></li><li><a href="#finalidades">Por que utilizamos os dados</a></li><li><a href="#compartilhamento">Com quem os dados podem ser compartilhados</a></li><li><a href="#acesso">Quem pode acessar suas informações</a></li><li><a href="#seguranca">Como protegemos as informações</a></li><li><a href="#armazenamento">Por quanto tempo guardamos os dados</a></li><li><a href="#direitos">Seus direitos e escolhas</a></li><li><a href="#preferencias">Informações guardadas no navegador</a></li><li><a href="#alteracoes">Alterações desta Política</a></li></ol>
+</nav>
+<article class="legal-article">
+<p class="kicker">Controly · Informações legais</p>
+<h1>Política de Privacidade</h1>
+<p class="intro">Entenda quais dados utilizamos, para quais finalidades e como exercer seus direitos.</p>
+<p class="updated">Última atualização: 10 de novembro de 2026</p>
+
+
+
+
+
+
+
+
+
+
+<section id="responsavel"><h2>Quem somos</h2><p>O <strong>Controly</strong> é oferecido pela <strong>VORA</strong>. Esta Política explica, de forma clara, como tratamos os dados pessoais relacionados ao uso da plataforma.</p><p>Para dúvidas sobre privacidade ou solicitações relacionadas aos seus dados, entre em contato pelos canais disponíveis no <a href="https://voralabs.company" rel="noopener noreferrer" target="_blank">site da VORA</a>.</p></section><section id="coletados"><h2>Quais informações utilizamos</h2><p>Tratamos as informações necessárias para você usar o Controly e aquelas que você escolhe adicionar, como:</p><ul><li><strong>Dados da conta:</strong> e-mail, nome de exibição e informações necessárias ao acesso.</li><li><strong>Perfil:</strong> foto, caso você escolha adicionar uma.</li><li><strong>Dados da sua rotina:</strong> atividades, metas, compromissos, matérias, tempo de estudo, livros, treinos e anotações.</li><li><strong>Registros financeiros pessoais:</strong> descrições, valores, datas, categorias e situações de pagamento que você informar.</li><li><strong>Dados de funcionamento:</strong> informações necessárias para manter a sessão, lembrar preferências e ajudar a prevenir acessos indevidos.</li></ul><p>O Controly não precisa do número completo do seu cartão nem de seu código de segurança para organizar lançamentos. Recomendamos não incluir esses dados nas notas.</p></section><section id="finalidades"><h2>Por que utilizamos os dados</h2><p>Utilizamos seus dados para permitir o acesso à conta, salvar os registros da sua rotina, apresentar acompanhamentos e relatórios, oferecer suporte, proteger o serviço e cumprir obrigações legais quando aplicáveis.</p><p>O tratamento é realizado de acordo com as finalidades e hipóteses legais previstas na Lei Geral de Proteção de Dados Pessoais (LGPD). Quando uma funcionalidade opcional exigir consentimento, ele deverá ser solicitado de maneira adequada.</p></section><section id="compartilhamento"><h2>Com quem os dados podem ser compartilhados</h2><p>Podemos utilizar prestadores de serviços necessários para manter a plataforma disponível, proteger contas, armazenar informações e atender solicitações. Esses prestadores recebem apenas os dados necessários às suas atividades, de acordo com as condições aplicáveis.</p><p>Também poderemos compartilhar informações quando houver obrigação legal, solicitação válida de autoridade competente ou necessidade legítima de proteger direitos, observados os requisitos legais.</p><p>Alguns prestadores podem operar fora do Brasil. Nesses casos, as transferências internacionais de dados devem observar os requisitos da legislação aplicável.</p></section><section id="acesso"><h2>Quem pode acessar suas informações</h2><p>O acesso à sua conta é pessoal. Adotamos controles para restringir o acesso aos registros de cada usuário.</p><p>Pessoas autorizadas a operar ou prestar suporte ao serviço podem acessar informações quando isso for necessário para atender uma solicitação, investigar problemas ou cumprir obrigações, respeitados os limites e controles aplicáveis.</p></section><section id="seguranca"><h2>Como protegemos as informações</h2><p>Utilizamos medidas de segurança e controle de acesso para reduzir riscos de perda, uso indevido ou acesso não autorizado. Nenhum serviço conectado à internet oferece risco zero.</p><p>Você também pode ajudar a proteger sua conta usando uma senha forte, mantendo seu dispositivo atualizado e encerrando a sessão em aparelhos compartilhados.</p></section><section id="armazenamento"><h2>Por quanto tempo guardamos os dados</h2><p>Conservamos os dados pelo período necessário para oferecer o serviço, atender suas solicitações e cumprir obrigações legais ou regulatórias aplicáveis.</p><p>Quando houver solicitação de exclusão ou encerramento da conta, os dados serão avaliados conforme sua finalidade e os prazos legais. Algumas informações podem precisar ser conservadas por mais tempo, inclusive em registros de segurança e cópias de recuperação.</p></section><section id="direitos"><h2>Seus direitos e escolhas</h2><p>Conforme a LGPD, você pode solicitar, entre outros direitos aplicáveis, confirmação do tratamento, acesso, correção, informação sobre compartilhamento, portabilidade e eliminação de dados nas hipóteses previstas em lei.</p><p>Você pode atualizar diversos registros diretamente no Controly e baixar um relatório com as informações da sua conta em <strong>Configurações</strong>. Para outras solicitações, utilize os canais disponíveis no <a href="https://voralabs.company" rel="noopener noreferrer" target="_blank">site da VORA</a>.</p><p>Solicitações serão analisadas e respondidas conforme a legislação aplicável.</p></section><section id="preferencias"><h2>Informações guardadas no navegador</h2><p>O Controly pode guardar preferências e informações temporárias no seu navegador para facilitar a navegação e manter determinadas escolhas durante o uso.</p><p>Você pode apagar esses dados nas configurações do navegador, embora isso possa remover preferências e exigir novo acesso à conta.</p></section><section id="alteracoes"><h2>Alterações desta Política</h2><p>Podemos atualizar esta Política quando houver mudanças na plataforma, nas nossas práticas ou nas exigências legais. Mudanças relevantes serão comunicadas quando necessário, e a data da versão atual ficará indicada nesta página.</p><p>Para conhecer as condições de utilização do Controly, consulte os <a href="./termos.html">Termos de Uso</a>.</p></section></article>
+</main>
+<footer class="legal-footer">
+<span>© 2026 Controly · Desenvolvido pela VORA</span>
+<nav aria-label="Links do rodapé"><a href="./index.html">Aplicativo</a><a href="./termos.html">Termos de Uso</a><a href="https://voralabs.company" rel="noopener noreferrer" target="_blank">Contato VORA</a></nav>
+</footer>
 </body>
 </html>

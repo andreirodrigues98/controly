@@ -1,10 +1,10 @@
 # Controly
 
-## Termos de Uso e Política de Privacidade
+## Termos de Uso e Política de Privacidade — versão 2.0.6
 
 As páginas públicas `termos.html` e `privacidade.html` ficam na raiz e são copiadas automaticamente para o GitHub Pages. Elas podem ser abertas sem login e possuem links no login e em Configurações. O CSS dessas páginas é `src/styles/legal.css`.
 
-**ATENÇÃO — revisão antes do lançamento comercial:** as páginas são minutas informativas baseadas nas funcionalidades analisadas, não documentos jurídicos homologados. É necessário confirmar a identificação do responsável legal, canal dedicado para pedidos de privacidade, prazos de retenção, bases legais de cada operação, regiões dos fornecedores, cobrança/cancelamento quando aplicáveis e procedimentos de exclusão. Revise os textos com assessoria jurídica antes de disponibilizar a clientes reais.
+**Revisão jurídica antes da comercialização:** os textos públicos usam linguagem voltada ao usuário e não descrevem a implementação interna. Confirmar a identificação formal do responsável pelo serviço, canal específico de privacidade, prazos e bases legais, transferências internacionais e condições comerciais. Uma revisão jurídica é necessária antes de disponibilizar a clientes reais.
 
 
 Aplicativo web de organização pessoal (rotina, estudos, leitura, treinos, finanças, metas e notas). Interface com Firebase Authentication e Firestore; administração opcional pelo Cloudflare Worker. Esta é uma **distribuição de código limpa**, não uma homologação de segurança/lançamento.
@@ -73,3 +73,17 @@ Para testar o pacote público com variáveis configuradas no ambiente, execute `
 ## Antes de vender
 
 Validar regras **publicadas** no Firebase, suspensões com duas contas, App Check, gravação de foto, leituras/custos, backups com restauração, revisão jurídica, acessibilidade e testes móveis com dados reais. O Worker foi implantado, mas isso não substitui homologação do Controly.
+
+## Se a pasta .github não aparecer no VS Code
+
+A pasta `.github/workflows/deploy-pages.yml` está incluída neste pacote. Ela começa com ponto, mas não pode ser omitida na publicação. Confira na raiz do projeto:
+
+```powershell
+Test-Path .github\workflows\deploy-pages.yml
+git status --short
+git ls-files .github/workflows/deploy-pages.yml
+```
+
+Se o último comando não retornar caminho, faça `git add .github/workflows/deploy-pages.yml` e inclua o arquivo no commit. Em **GitHub → Settings → Pages**, selecione **GitHub Actions** como origem.
+
+O workflow valida a presença dos seis Secrets do Firebase **sem imprimir seus valores**. Se algum faltar, o log identificará o nome da configuração ausente.

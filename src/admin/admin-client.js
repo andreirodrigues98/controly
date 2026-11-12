@@ -20,6 +20,22 @@ export function adminErrorMessage(error) {
   return 'Não foi possível conectar à Administração VORA. Verifique se a API está publicada e se este endereço está autorizado.';
 }
 
+const ADMIN_REQUEST_TIMEOUT_MS = 12000;
+
+async function limitedWait(promise, timeoutMs = ADMIN_REQUEST_TIMEOUT_MS) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new AdminRequestError('A verificação demorou além do esperado. Tente novamente.')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const routeFor = {
   voraWhoAmI: '/v1/me',
   voraAccountSession: '/v1/session',
@@ -31,13 +47,16 @@ const routeFor = {
 async function workerCall(name, payload = {}) {
   const user = auth?.currentUser;
   if (!user) throw new AdminRequestError('Entre na sua conta para acessar a administração.', 401);
-  const token = await user.getIdToken();
+  const token = await limitedWait(user.getIdToken());
   const params = new URLSearchParams();
   if (name === 'voraListAccounts' && payload.pageToken) params.set('pageToken', String(payload.pageToken));
   const url = `${controlyRuntime.adminWorkerUrl}${routeFor[name]}${params.size ? `?${params}` : ''}`;
   let response;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ADMIN_REQUEST_TIMEOUT_MS);
   try {
     response = await fetch(url, {
+      signal: controller.signal,
       method: name === 'voraSetAccountAccess' ? 'POST' : 'GET',
       headers: {Authorization: `Bearer ${token}`, ...(name === 'voraSetAccountAccess' ? {'Content-Type':'application/json'} : {})},
       ...(name === 'voraSetAccountAccess' ? {body: JSON.stringify({uid:payload.uid,status:payload.status})} : {}),
@@ -45,8 +64,10 @@ async function workerCall(name, payload = {}) {
     });
   } catch {
     throw new AdminRequestError('Não foi possível alcançar a API administrativa.');
+  } finally {
+    clearTimeout(timer);
   }
-  const result = await response.json().catch(() => ({}));
+  const result = await limitedWait(response.json().catch(() => ({})));
   if (!response.ok) throw new AdminRequestError(result.error || 'A administração não está disponível.', response.status);
   return result;
 }

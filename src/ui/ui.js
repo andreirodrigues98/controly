@@ -532,10 +532,12 @@ export function closeSidebar() {
 export function showLoader(message = "Carregando...") {
   loaderText.textContent = message;
   loader.classList.add("active");
+  window.__CONTROLY_LOADING_GUARD__?.start();
 }
 
 export function hideLoader() {
   loader.classList.remove("active");
+  window.__CONTROLY_LOADING_GUARD__?.stop();
 }
 
 export function showAuthShell() {

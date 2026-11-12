@@ -40,7 +40,10 @@ const loginEmail = document.getElementById('login-email');
 const loginPassword = document.getElementById('login-password');
 const loginFeedback = document.getElementById('login-feedback');
 const loginSubmitButton = loginForm.querySelector('[type=submit]');
-const throttle = new ClientThrottle({ storage: window.sessionStorage,
+// Alguns navegadores em modo privado podem bloquear o acesso ao storage.
+let authStorage = null;
+try { authStorage = window.sessionStorage; } catch { /* usar memória temporária */ }
+const throttle = new ClientThrottle({ storage: authStorage,
   namespace: `controly.${controlyRuntime.environment}.${controlyRuntime.environment === 'local' ? 'demo' : 'remote'}.auth.v1` });
 const resetDialog = document.getElementById('reset-password-dialog');
 const changeDialog = document.getElementById('change-password-dialog');
@@ -382,6 +385,8 @@ changeForm?.addEventListener('submit', async (event) => {
 
 bindNavigation(navigate);
 setupDateLabel();
+// Os ícones são decorativos; uma rede lenta não deve bloquear a tela de login.
+window.addEventListener('load', refreshIcons);
 let lastAccessReviewAt = 0;
 async function revalidateSessionInBackground() {
   if (!state.user || !isWorkerAdmin()) return;

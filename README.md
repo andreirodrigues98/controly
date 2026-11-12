@@ -1,4 +1,4 @@
-# Controly 2.0.9
+# Controly 2.0.10
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
 
@@ -106,3 +106,6 @@ O Worker passou a rejeitar operações administrativas de contas suspensas, limi
 6. **Privacidade e experiência:** confirmar identificação do controlador e contato de privacidade nas páginas legais, testar exportação e solicitações de exclusão, garantir acessibilidade com teclado e celular físico.
 
 A aprovação dos testes automatizados não substitui a homologação com Firebase e Cloudflare reais. Não existe atribuição automática de nota 9,5 nem garantia de lançamento após esta atualização.
+
+## Inicialização em celulares (2.0.10)
+O carregamento possui recuperação após 18 segundos, sem mostrar dados internos ao usuário. A biblioteca de ícones é assíncrona e o Worker administrativo tem tempo máximo de espera. Não são necessárias mudanças nas regras Firestore. Se um aparelho não carregar, testar também em aba privada e verificar no navegador os erros de rede; o fallback não é uma confirmação de causa única.

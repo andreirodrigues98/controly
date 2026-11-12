@@ -20,13 +20,50 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=2.0.10" />
   </head>
   <body>
     <div id="app-loader" class="app-loader active" aria-live="polite">
-      <div class="loader-orb"></div>
-      <p id="app-loader-text">Carregando seu painel pessoal...</p>
+      <div class="app-loader-inner">
+        <div class="loader-orb" aria-hidden="true"></div>
+        <p id="app-loader-text">Carregando seu painel pessoal...</p>
+        <div id="app-loader-recovery" class="app-loader-recovery" hidden>
+          <strong>Não foi possível concluir o carregamento.</strong>
+          <p>Confira sua conexão e tente abrir novamente. Seus dados estão preservados.</p>
+          <button id="app-loader-retry" class="btn btn-primary" type="button">Tentar novamente</button>
+        </div>
+      </div>
     </div>
+    <script>
+      // Esta proteção é independente dos módulos: funciona mesmo se o JavaScript
+      // do aplicativo ou um serviço de terceiros não conseguir inicializar.
+      (() => {
+        const loader = document.getElementById('app-loader');
+        const recovery = document.getElementById('app-loader-recovery');
+        const text = document.getElementById('app-loader-text');
+        const retry = document.getElementById('app-loader-retry');
+        let timer;
+        function start() {
+          clearTimeout(timer);
+          recovery.hidden = true;
+          loader.classList.remove('load-failed');
+          timer = setTimeout(() => {
+            if (!loader.classList.contains('active')) return;
+            loader.classList.add('load-failed');
+            text.textContent = 'Não conseguimos iniciar o Controly.';
+            recovery.hidden = false;
+          }, 18000);
+        }
+        function stop() {
+          clearTimeout(timer);
+          loader.classList.remove('load-failed');
+          recovery.hidden = true;
+        }
+        retry.addEventListener('click', () => location.reload());
+        window.__CONTROLY_LOADING_GUARD__ = { start, stop };
+        start();
+      })();
+    </script>
 
     <section id="auth-screen" class="auth-screen hidden">
       <div class="auth-hero glass-card">
@@ -262,7 +299,7 @@
       </div>
     </template>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="./src/app.js"></script>
+    <script async src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="./src/app.js?v=2.0.10"></script>
   </body>
 </html>

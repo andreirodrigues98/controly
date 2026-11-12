@@ -15935,3 +15935,39 @@ html[data-theme] .search-palette-dialog {max-width: min(900px, calc(100vw - 24px
  .dashboard-quick-btn { flex: 1 1 calc(50% - 8px); min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .dashboard-quick-btn { transition: none; } }
+
+
+/* Inicialização resiliente no celular: o indicador e a mensagem ficam juntos. */
+.app-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  text-align: center;
+}
+.app-loader-inner {
+  width: min(100%, 390px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.app-loader-inner > p { margin: 0; line-height: 1.5; }
+.app-loader-recovery[hidden] { display: none !important; }
+.app-loader-recovery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 18px;
+  background: rgba(31,43,66,.85);
+  color: #fff;
+}
+.app-loader-recovery strong { font-size: 1.02rem; }
+.app-loader-recovery p { margin: 0; color: #ced7eb; font-size: .91rem; line-height: 1.5; }
+.app-loader.load-failed .loader-orb { animation: none; opacity: .35; }
+.app-loader-recovery button { min-height: 44px; }

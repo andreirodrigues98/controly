@@ -15971,3 +15971,18 @@ html[data-theme] .search-palette-dialog {max-width: min(900px, calc(100vw - 24px
 .app-loader-recovery p { margin: 0; color: #ced7eb; font-size: .91rem; line-height: 1.5; }
 .app-loader.load-failed .loader-orb { animation: none; opacity: .35; }
 .app-loader-recovery button { min-height: 44px; }
+
+/* Admin VORA — controles de contas 2.0.13 */
+.admin-create-panel{margin-bottom:16px}
+.admin-create-panel h4{margin:0 0 8px;font-size:1.15rem}
+.admin-create-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;align-items:end;gap:12px;margin-top:18px}
+.admin-create-form label{display:flex;flex-direction:column;gap:7px;min-width:0;font-weight:600;font-size:.9rem}
+.admin-create-form input{width:100%;min-width:0;padding:12px 14px;min-height:46px;background:rgba(255,255,255,.07);border:1px solid var(--border,rgba(255,255,255,.2));border-radius:12px;color:inherit}
+.admin-create-form button{min-height:46px;white-space:normal}
+.admin-create-note{font-size:.8rem;opacity:.72;margin-top:12px}
+.admin-row-actions{display:flex;flex-wrap:wrap;gap:8px}
+.admin-row-actions button{white-space:nowrap}
+.admin-remove-access{border-color:rgba(245,135,135,.4)}
+.admin-state.is-pending{color:#f4d19d}.admin-state.is-removed{color:#ff9d9d}
+@media(max-width:980px){.admin-create-form{grid-template-columns:1fr 1fr}.admin-create-form button{grid-column:1/-1}}
+@media(max-width:580px){.admin-create-form{grid-template-columns:1fr}.admin-create-form button{grid-column:auto}.admin-row-actions{flex-direction:column;align-items:flex-start}}

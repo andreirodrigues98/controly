@@ -15,7 +15,8 @@ test('GitHub Pages publica o build e verifica a config antes do deploy', () => {
 
 test('Falha de importacao tem recuperação imediata e nao atribui erro a conexão', () => {
   const html = read('index.html');
-  assert.match(html, /import\('\.\/src\/app\.js\?v=2\.0\.12'\)\.catch/);
+  const version = JSON.parse(read('package.json')).version;
+  assert.ok(html.includes(`import('./src/app.js?v=${version}').catch`), 'Versão de cache deve acompanhar o pacote');
   assert.match(html, /recovery\.hidden = false/);
   assert.doesNotMatch(html, /Confira sua conexão/);
 });

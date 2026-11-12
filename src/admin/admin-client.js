@@ -14,6 +14,8 @@ export class AdminRequestError extends Error {
 export function adminErrorMessage(error) {
   if (error?.status === 403) return 'Esta conta não está autorizada no Admin VORA, ou a origem do site ainda não foi liberada na API.';
   if (error?.status === 401) return 'Sua sessão precisa ser renovada. Saia e entre novamente.';
+  if (error?.status === 409) return error.message || 'Esta conta já existe ou não pode ser alterada nesta situação.';
+  if (error?.status === 400) return error.message || 'Confira os dados informados.';
   if (error?.status === 429) return 'Muitas consultas em sequência. Tente novamente mais tarde.';
   if (error?.status === 503) return 'A API administrativa não conseguiu acessar o serviço. Confira as credenciais e permissões.';
   if (!navigator.onLine) return 'Sem conexão com a internet.';
@@ -41,6 +43,8 @@ const routeFor = {
   voraAccountSession: '/v1/session',
   voraListAccounts: '/v1/accounts',
   voraSetAccountAccess: '/v1/accounts/access',
+  voraCreateAccount: '/v1/accounts/create',
+  voraResendInvite: '/v1/accounts/invite',
   voraListAudit: '/v1/audit',
 };
 
@@ -51,15 +55,19 @@ async function workerCall(name, payload = {}) {
   const params = new URLSearchParams();
   if (name === 'voraListAccounts' && payload.pageToken) params.set('pageToken', String(payload.pageToken));
   const url = `${controlyRuntime.adminWorkerUrl}${routeFor[name]}${params.size ? `?${params}` : ''}`;
+  const isWrite = ['voraSetAccountAccess','voraCreateAccount','voraResendInvite'].includes(name);
+  const body = name === 'voraSetAccountAccess' ? {uid:payload.uid,status:payload.status}
+    : name === 'voraCreateAccount' ? {email:payload.email,displayName:payload.displayName}
+    : name === 'voraResendInvite' ? {uid:payload.uid} : undefined;
   let response;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ADMIN_REQUEST_TIMEOUT_MS);
   try {
     response = await fetch(url, {
       signal: controller.signal,
-      method: name === 'voraSetAccountAccess' ? 'POST' : 'GET',
-      headers: {Authorization: `Bearer ${token}`, ...(name === 'voraSetAccountAccess' ? {'Content-Type':'application/json'} : {})},
-      ...(name === 'voraSetAccountAccess' ? {body: JSON.stringify({uid:payload.uid,status:payload.status})} : {}),
+      method: isWrite ? 'POST' : 'GET',
+      headers: {Authorization: `Bearer ${token}`, ...(isWrite ? {'Content-Type':'application/json'} : {})},
+      ...(isWrite ? {body: JSON.stringify(body)} : {}),
       cache: 'no-store',
     });
   } catch {

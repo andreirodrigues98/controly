@@ -3,7 +3,7 @@
  */
 const CERTS_JWK = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
-const SCOPE = 'https://www.googleapis.com/auth/datastore';
+const SCOPE = 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/identitytoolkit';
 let publicKeys = null;
 let keysExpireAt = 0;
 let oauth = null;
@@ -85,6 +85,93 @@ async function getGoogleToken(env) {
   oauthExpiresAt = Date.now() + (Number(result.expires_in) || 3600)*1000;
   return oauth;
 }
+function identityApiKey(env) {
+  const key = String(env.FIREBASE_WEB_API_KEY || '').trim();
+  if (!/^[A-Za-z0-9_-]{20,160}$/.test(key)) invalid(503, 'Configure FIREBASE_WEB_API_KEY como segredo no Worker para cadastrar contas.');
+  return key;
+}
+async function identityRequest(env, endpoint, body, errorStatus = 503) {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/${endpoint}?key=${encodeURIComponent(identityApiKey(env))}`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${await getGoogleToken(env)}`, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    let errorCode = '';
+    try {errorCode = (await response.json())?.error?.message || '';} catch {}
+    if (/EMAIL_EXISTS|EMAIL_ALREADY_EXISTS/.test(errorCode)) invalid(409, 'Este e-mail já possui uma conta.');
+    if (response.status === 403) invalid(503, 'A conta de serviço precisa da permissão Firebase Authentication Admin para cadastrar usuários.');
+    if (/OPERATION_NOT_ALLOWED/.test(errorCode)) invalid(503, 'Habilite o provedor E-mail/senha no Firebase Authentication.');
+    invalid(errorStatus, 'Não foi possível concluir esta ação no Firebase Authentication.');
+  }
+  return response.json();
+}
+function cleanEmail(value) {
+  if (typeof value !== 'string' || value.length > 254) invalid(400, 'Informe um e-mail válido.');
+  const email = value.trim().toLowerCase();
+  if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) invalid(400, 'Informe um e-mail válido.');
+  return email;
+}
+function cleanName(value) {
+  if (typeof value !== 'string' || value.trim().length < 2 || value.trim().length > 100 || /[<>\x00-\x1f]/.test(value)) invalid(400, 'Informe um nome com 2 a 100 caracteres.');
+  return value.trim().replace(/\s+/g, ' ');
+}
+function docValue(value) {return {stringValue: String(value)};}
+function docTime(value) {return {timestampValue: value};}
+function documentPath(env, resource, id) {return `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/${resource}/${id}`;}
+async function commitWrites(env, writes) {return firestoreRequest(env, 'POST', ':commit', {writes});}
+async function markInviteDelivered(env, uid, actorUid, action) {
+  const now = new Date().toISOString();
+  const auditId = crypto.randomUUID();
+  await commitWrites(env, [
+    {update:{name:documentPath(env,'accountAccess',uid),fields:{status:docValue('active'),updatedAt:docTime(now),updatedBy:docValue(actorUid)}},updateMask:{fieldPaths:['status','updatedAt','updatedBy']}},
+    {update:{name:documentPath(env,'adminAudit',auditId),fields:{actorUid:docValue(actorUid),targetUid:docValue(uid),action:docValue(action),at:docTime(now)}},currentDocument:{exists:false}},
+  ]);
+}
+async function sendPasswordSetup(env, email) {
+  // O link é enviado pelo Firebase; senhas jamais passam pelo navegador do administrador.
+  return identityRequest(env, 'accounts:sendOobCode', {requestType:'PASSWORD_RESET',email}, 503);
+}
+async function createAccount(env, body, actorUid) {
+  identityApiKey(env); // Evita criar identidade sem poder enviar o convite.
+  const email = cleanEmail(body.email);
+  const displayName = cleanName(body.displayName);
+  // A senha aleatória não é transmitida, armazenada pelo app nem exibida ao administrador.
+  const password = encoded(crypto.getRandomValues(new Uint8Array(36)));
+  const created = await identityRequest(env, `projects/${encodeURIComponent(env.FIREBASE_PROJECT_ID)}/accounts`, { email, displayName, password, emailVerified:false, disabled:false });
+  const uid = cleanUid(created.localId);
+  const now = new Date().toISOString();
+  try {
+    await commitWrites(env, [
+      {update:{name:documentPath(env,'users',uid),fields:{uid:docValue(uid),email:docValue(email),displayName:docValue(displayName),createdAt:docTime(now),updatedAt:docTime(now),avatarDataUrl:docValue('')}},currentDocument:{exists:false}},
+      {update:{name:documentPath(env,'accountAccess',uid),fields:{status:docValue('pending'),updatedAt:docTime(now),updatedBy:docValue(actorUid)}},currentDocument:{exists:false}},
+      {update:{name:documentPath(env,'adminAudit',crypto.randomUUID()),fields:{actorUid:docValue(actorUid),targetUid:docValue(uid),action:docValue('create'),at:docTime(now)}},currentDocument:{exists:false}},
+    ]);
+  } catch (error) {
+    // Um perfil órfão nunca deve permanecer ativo se a persistência falhar.
+    try { await identityRequest(env, `projects/${encodeURIComponent(env.FIREBASE_PROJECT_ID)}/accounts:delete`, {localId:uid}); } catch {}
+    throw error;
+  }
+  try {
+    await sendPasswordSetup(env,email);
+    await markInviteDelivered(env,uid,actorUid,'invite');
+    return {success:true,uid,invited:true};
+  } catch {
+    // A conta permanece pending e sem acesso; a operação de reenvio conclui a ativação.
+    return {success:true,uid,invited:false,notice:'Conta criada, mas o e-mail de acesso não foi confirmado. Use Reenviar acesso.'};
+  }
+}
+async function resendInvite(env, uid, actorUid) {
+  cleanUid(uid);
+  if (isAdminUid(uid,env)) invalid(403,'Conta administrativa protegida.');
+  const profile = await firestoreRequest(env,'GET',`/users/${uid}`);
+  if (!profile) invalid(404,'Conta não encontrada.');
+  const access = await firestoreRequest(env,'GET',`/accountAccess/${uid}`);
+  if (firestoreValue(access?.fields?.status) !== 'pending') invalid(409,'Este acesso não está aguardando convite.');
+  await sendPasswordSetup(env,cleanEmail(firestoreValue(profile.fields?.email)));
+  await markInviteDelivered(env,uid,actorUid,'invite');
+  return {success:true};
+}
 function firestoreBase(env) { return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(env.FIREBASE_PROJECT_ID)}/databases/(default)/documents`; }
 async function firestoreRequest(env, method, path, data) {
   const response = await fetch(firestoreBase(env)+path, {method,headers:{authorization:`Bearer ${await getGoogleToken(env)}`,'content-type':'application/json'},body: data === undefined ? undefined : JSON.stringify(data)});
@@ -115,7 +202,7 @@ async function accountSession(env, uid) {
   const status = firestoreValue(record?.fields?.status);
   // Compatibilidade de migração: contas ainda sem accountAccess estão ativas.
   // Só o backend autenticado pode responder sobre o estado da sessão.
-  return { status: status === 'suspended' ? 'suspended' : 'active', admin: isAdminUid(uid, env) };
+  return { status: status && status !== 'active' ? 'suspended' : 'active', admin: isAdminUid(uid, env) };
 }
 async function listAccounts(env, pageToken='', actorUid='') {
   if (pageToken.length > 512) invalid(400,'Página inválida.');
@@ -128,7 +215,7 @@ async function listAccounts(env, pageToken='', actorUid='') {
     const access = await firestoreRequest(env,'GET',`/accountAccess/${uid}`);
     return { uid, email: firestoreValue(user.fields?.email) || '', displayName: firestoreValue(user.fields?.displayName) || '',
       createdAt: firestoreValue(user.fields?.createdAt) || user.createTime || '',
-      status: firestoreValue(access?.fields?.status) === 'suspended' ? 'suspended' : 'active',
+      status: ['suspended','removed','pending'].includes(firestoreValue(access?.fields?.status)) ? firestoreValue(access.fields.status) : 'active',
       isSuperAdmin: isAdminUid(uid,env),isSelf: uid === actorUid };
   }));
   return {accounts,nextPageToken:result?.nextPageToken || ''};
@@ -147,7 +234,7 @@ async function listAudit(env) {
 }
 async function changeAccess(env, uid, status, operatorUid) {
   cleanUid(uid);
-  if (!['active','suspended'].includes(status)) invalid(400,'Situação inválida.');
+  if (!['active','suspended','removed'].includes(status)) invalid(400,'Situação inválida.');
   if (uid === operatorUid || isAdminUid(uid,env)) invalid(403,'Não é permitido alterar uma conta administradora.');
   const userProfile = await firestoreRequest(env,'GET',`/users/${uid}`);
   if (!userProfile) invalid(404,'Conta não encontrada.');
@@ -156,7 +243,7 @@ async function changeAccess(env, uid, status, operatorUid) {
   const now = new Date().toISOString();
   await firestoreRequest(env,'POST',':commit',{writes:[
     {update:{name:`${path}/accountAccess/${uid}`,fields:{status:{stringValue:status},updatedAt:{timestampValue:now},updatedBy:{stringValue:operatorUid}}},updateMask:{fieldPaths:['status','updatedAt','updatedBy']}},
-    {update:{name:`${path}/adminAudit/${auditId}`,fields:{actorUid:{stringValue:operatorUid},targetUid:{stringValue:uid},action:{stringValue:status==='suspended'?'suspend':'activate'},at:{timestampValue:now}}},currentDocument:{exists:false}}
+    {update:{name:`${path}/adminAudit/${auditId}`,fields:{actorUid:{stringValue:operatorUid},targetUid:{stringValue:uid},action:{stringValue:status==='suspended'?'suspend':status==='removed'?'remove':'activate'},at:{timestampValue:now}}},currentDocument:{exists:false}}
   ]});
   return {success:true,status};
 }
@@ -213,15 +300,19 @@ export default {
       const action = request.method === 'GET' && url.pathname === '/v1/me' ? 'me'
         : request.method === 'GET' && url.pathname === '/v1/audit' ? 'audit'
         : request.method === 'GET' && url.pathname === '/v1/accounts' ? 'list'
-        : request.method === 'POST' && url.pathname === '/v1/accounts/access' ? 'change' : null;
+        : request.method === 'POST' && url.pathname === '/v1/accounts/access' ? 'change'
+        : request.method === 'POST' && url.pathname === '/v1/accounts/create' ? 'create'
+        : request.method === 'POST' && url.pathname === '/v1/accounts/invite' ? 'invite' : null;
       if (!action) invalid(404,'Operação não encontrada.');
-      const binding = action === 'change' ? env.ADMIN_WRITE_LIMIT : env.ADMIN_READ_LIMIT;
+      const binding = ['change','create','invite'].includes(action) ? env.ADMIN_WRITE_LIMIT : env.ADMIN_READ_LIMIT;
       // Falha fechada: nunca operar sem proteção ativa contra abuso.
       if (!binding || !(await binding.limit({key:payload.sub})).success) invalid(429,'Limite de consultas atingido ou proteção indisponível.');
       if (action === 'me') return json({admin:true},200,origin);
       if (action === 'list') return json(await listAccounts(env,url.searchParams.get('pageToken') || '',payload.sub),200,origin);
       if (action === 'audit') return json(await listAudit(env),200,origin);
       const body = await readAdminJson(request);
+      if (action === 'create') return json(await createAccount(env,body,payload.sub),201,origin);
+      if (action === 'invite') return json(await resendInvite(env,body.uid,payload.sub),200,origin);
       return json(await changeAccess(env,body.uid,body.status,payload.sub),200,origin);
     } catch(error) {
       return json({error:error instanceof AdminError ? error.message : 'Operação indisponível.'},error instanceof AdminError ? error.status : 503,origin);

@@ -1,4 +1,4 @@
-# Controly 2.0.12
+# Controly 2.0.13
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
 
@@ -27,11 +27,15 @@ Nunca copie a chave de conta de serviço (`firebase-admin.json`, `FIREBASE_SERVI
 
 ## Administração VORA — ordem para ativar
 
-O painel só aparece quando a API autentica a conta por **UID** (não por e-mail). O Worker publicado anteriormente precisa ser atualizado com o código desta versão antes de habilitar o admin no site.
+O painel só aparece quando a API autentica a conta por **UID** (não por e-mail). Para testar a conta `voracontroly` no site publicado, configure também `CONTROLY_ADMIN_BACKEND_ENABLED=true` em **GitHub → Settings → Secrets and variables → Actions → Variables** e faça um novo deploy. O `.env.development` não altera o GitHub Pages. O Worker publicado anteriormente precisa ser atualizado com o código desta versão antes de habilitar o admin no site.
 
 1. Faça backup das regras atuais no Firebase e confira o ID do projeto (`controly-ec636`).
 2. Entre em `worker-admin/wrangler.jsonc`: confirme `FIREBASE_PROJECT_ID` e `ALLOWED_ORIGINS`. Já estão incluídos os dois endereços do Live Server e `https://andreirodrigues98.github.io`. Nunca use `*` como origem.
 3. Confirme no Cloudflare que existem os segredos `VORA_ADMIN_UIDS` e `FIREBASE_SERVICE_ACCOUNT_JSON`. Não compartilhe seus valores. O primeiro deve conter o UID **exato** do usuário atualmente conectado, ou uma lista separada por vírgulas de UIDs autorizados.
+**Cadastro de usuários (2.0.13):** além desses dois segredos, cadastre uma vez `FIREBASE_WEB_API_KEY` na Cloudflare usando `npx wrangler secret put FIREBASE_WEB_API_KEY` dentro de `worker-admin`. O valor é o `apiKey` da configuração Web do projeto Firebase (não é a chave privada da conta de serviço). No Google Cloud IAM, conceda à **mesma conta de serviço utilizada pelo Worker** o papel `Firebase Authentication Admin` (`roles/firebaseauth.admin`), além do acesso ao Firestore já existente. Essa permissão permite criar identidades; conceda-a somente à conta de serviço restrita a essa API. Não salve a chave no repositório. Confira também que o provedor E-mail/senha está habilitado no Firebase Authentication.
+
+Ao clicar em **Cadastrar e enviar acesso**, o Worker cria a identidade com senha aleatória e envia um e-mail para a pessoa definir a própria senha. A senha não aparece para o administrador. Se o e-mail não for confirmado, a conta ficará em **Aguardando acesso**, sem acesso aos dados, até o envio ser refeito. O botão **Remover acesso** arquiva e bloqueia a conta, **sem excluir seus dados ou sua identidade no Firebase Authentication**; isso permite restaurar o acesso depois. Exclusão definitiva exige um processo separado de retenção, direitos do titular e remoção dos registros relacionados.
+
 4. Atualize a API Cloudflare pelo terminal na raiz do projeto:
 
 ```powershell
@@ -55,7 +59,7 @@ CONTROLY_ADMIN_WORKER_URL=https://controly-vora-admin.andreirodrigues1510.worker
 7. Rode `npm run config:development`. Abra o Live Server, entre novamente na conta autorizada e acesse **Administração VORA** pelo menu. Se não aparecer, abra `http://127.0.0.1:5500/index.html?admin=1`, entre em **Configurações** e pressione **Verificar meu acesso**. Essa tela permite copiar o UID da conta conectada. Se o UID não estiver no segredo `VORA_ADMIN_UIDS`, atualize o segredo com `cd worker-admin` e `npx wrangler secret put VORA_ADMIN_UIDS` (não exponha o valor).
 8. Antes de testar suspensão, confira as regras **atualmente publicadas no Firebase Console → Firestore Database → Regras**. Mantenha uma cópia privada fora do repositório e teste com contas diferentes no emulador. A API verifica a situação da conta; as regras efetivamente publicadas protegem o acesso direto ao Firestore.
 
-**Importante:** o painel lista contas que já possuem perfil na coleção `users` do Firestore. Contas criadas no Authentication que nunca acessaram o Controly podem não aparecer até o primeiro login. A API permite consultar, suspender, reativar e registrar auditoria. Ela não implementa ainda cobrança, criação administrativa de senhas ou gestão completa de assinaturas.
+**Importante:** o painel lista contas que já possuem perfil na coleção `users` do Firestore. Contas criadas no Authentication que nunca acessaram o Controly podem não aparecer até o primeiro login. A API permite cadastrar usuários, enviar e reenviar um e-mail para definição da senha, consultar contas, suspender, reativar, remover o acesso (arquivamento reversível) e registrar auditoria. Não existe exclusão permanente automática, cobrança nem gestão de assinaturas nesta versão.
 
 ## Publicação no GitHub Pages
 

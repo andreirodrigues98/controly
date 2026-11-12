@@ -1,6 +1,14 @@
-# Controly 2.0.10
+# Controly 2.0.12
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
+
+## Regras do Firestore não ficam no GitHub
+
+O arquivo `firestore.rules` foi removido do projeto público; `.gitignore` ignora arquivos `*.rules` e `*.rules.txt`. `npm run check` e `npm test` **não dependem de regras privadas**. A cópia das regras fornecida separadamente deve permanecer **fora da pasta CONTROLY e fora de qualquer repositório Git**. Não inclua a cópia privada no ZIP que vai para o GitHub.
+
+Para conferir segurança, abra **Firebase Console → Firestore Database → Regras** e faça backup das regras atuais. Teste as regras com o Firebase Emulator Suite em ambiente separado, cobrindo acesso entre usuários, contas suspensas e gravações indevidas. A publicação do frontend não atualiza nem valida essas regras. A remoção das regras da branch principal **não apaga o histórico antigo do GitHub** e **não aumenta a segurança de regras permissivas**.
+
+Se `firestore.rules` já foi enviado em algum commit, o `.gitignore` sozinho não o remove dos arquivos rastreados. Na raiz do projeto, use `git rm --cached --ignore-unmatch firestore.rules` para deixar de rastreá-lo **sem apagar a sua cópia local**. Depois execute `git status --short` e confira a exclusão antes de fazer commit. Guarde a cópia fora da pasta do projeto. **Não rode `git add -f` para regras ou credenciais**.
 
 ## Executar com Live Server
 
@@ -45,7 +53,7 @@ CONTROLY_ADMIN_WORKER_URL=https://controly-vora-admin.andreirodrigues1510.worker
 ```
 
 7. Rode `npm run config:development`. Abra o Live Server, entre novamente na conta autorizada e acesse **Administração VORA** pelo menu. Se não aparecer, abra `http://127.0.0.1:5500/index.html?admin=1`, entre em **Configurações** e pressione **Verificar meu acesso**. Essa tela permite copiar o UID da conta conectada. Se o UID não estiver no segredo `VORA_ADMIN_UIDS`, atualize o segredo com `cd worker-admin` e `npx wrangler secret put VORA_ADMIN_UIDS` (não exponha o valor).
-8. Antes de testar suspensão, compare, teste e publique o arquivo único `firestore.rules` em **Firebase Console → Firestore Database → Regras**. A API também verifica a situação da conta ao iniciar a sessão; as regras do Firestore garantem proteção nos acessos diretos aos dados.
+8. Antes de testar suspensão, confira as regras **atualmente publicadas no Firebase Console → Firestore Database → Regras**. Mantenha uma cópia privada fora do repositório e teste com contas diferentes no emulador. A API verifica a situação da conta; as regras efetivamente publicadas protegem o acesso direto ao Firestore.
 
 **Importante:** o painel lista contas que já possuem perfil na coleção `users` do Firestore. Contas criadas no Authentication que nunca acessaram o Controly podem não aparecer até o primeiro login. A API permite consultar, suspender, reativar e registrar auditoria. Ela não implementa ainda cobrança, criação administrativa de senhas ou gestão completa de assinaturas.
 
@@ -73,13 +81,13 @@ No GitHub: **Settings → Pages → Source: GitHub Actions**. Depois faça `git 
 - Execute backup **restaurável** do banco e teste a restauração em ambiente isolado. O relatório HTML do usuário **não é** um backup restaurável.
 - Revise App Check, limites de uso, permissões IAM, política de privacidade, canal de contato, termos comerciais e retenção de dados antes de aceitar clientes pagantes.
 
-`npm run check` verifica imports e estrutura; `npm test` executa testes locais de segurança e da API. **Testes locais não substituem homologação no Firebase e Cloudflare reais.** Não considere o Controly liberado para produção antes dessas verificações.
+`npm run check` verifica imports e estrutura; `npm test` executa testes locais da API e do frontend. Nenhum deles comprova a segurança das regras privadas do Firestore. **Testes locais não substituem homologação no Firebase e Cloudflare reais.** Não considere o Controly liberado para produção antes dessas verificações.
 
 ## Estrutura
 
 - `src/` — módulos, estado, domínio, serviços, interface e administração.
 - `worker-admin/` — API segura para Cloudflare Workers; segredos nunca entram no Git.
-- `firestore.rules` — única fonte de regras de acesso do Firestore.
+- **Regras Firestore:** armazenadas e gerenciadas separadamente no Firebase Console e em backup privado, **não neste repositório**.
 - `scripts/` — verificação, geração de config e build público.
 - `.github/workflows/` — publicação GitHub Pages.
 - `termos.html` e `privacidade.html` — páginas públicas; revisão jurídica final necessária.
@@ -98,7 +106,7 @@ O Worker passou a rejeitar operações administrativas de contas suspensas, limi
 
 ### Pendências de segurança a validar antes da comercialização
 
-1. **Regras publicadas do Firestore:** comparar o conteúdo do Console com `firestore.rules`, testar acesso entre contas e negação de contas suspensas usando o emulador. Não substituir as regras ativas sem backup e testes. Na versão atual, contas sem documento em `accountAccess` são tratadas como ativas por compatibilidade; após migrar todas, recomendamos retirar essa exceção para adotar bloqueio por padrão.
+1. **Regras publicadas do Firestore:** fazer backup fora do repositório, testar o isolamento entre contas e a negação de contas suspensas no emulador. Não substituir as regras ativas sem testes e plano de reversão. A cópia privada disponibilizada separadamente nesta entrega permite migração, mas **não confirma** que seja idêntica às regras ativas no Firebase; compare antes de qualquer publicação. Contas sem documento em `accountAccess` podem continuar ativas por compatibilidade, o que deve ser revisto antes do lançamento.
 2. **App Check:** registrar o domínio em Firebase App Check (reCAPTCHA Enterprise), configurar a chave pública de site por ambiente, acompanhar as métricas e só então ativar enforcement. Antes disso, ativá-lo de imediato pode bloquear clientes legítimos.
 3. **Admin:** verificar token, permissões, revogação de acesso e proteção por múltiplos usuários; considerar MFA/2FA para contas administrativas. A revogação imediata de tokens de Authentication ainda exige mecanismo próprio. Não confundir o bloqueio de dados no Firestore com desabilitar o login no Authentication.
 4. **Backups:** configurar e testar recuperação real dos documentos em ambiente isolado. Relatório HTML não é backup restaurável.

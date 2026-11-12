@@ -9,7 +9,7 @@ const required = [
   'index.html', 'styles.css', 'src/styles/app.css', 'src/app.js',
   'src/state/state.js', 'src/services/firebase.js', 'src/services/store.js',
   'worker-admin/src/index.js', 'worker-admin/wrangler.jsonc',
-  'firestore.rules', '.gitignore', '.github/workflows/deploy-pages.yml',
+  '.gitignore', '.github/workflows/deploy-pages.yml',
   'termos.html', 'privacidade.html', 'src/styles/legal.css',
 ];
 for (const file of required) if (!existsSync(resolve(root, file))) problems.push(`Arquivo ausente: ${file}`);
@@ -33,15 +33,18 @@ function walk(folder) {
 }
 walk('src'); walk('scripts'); walk('worker-admin/src');
 
-// Um unico arquivo de regras; configuracoes do backend ficam separadas do browser.
-const rules = readFileSync(resolve(root,'firestore.rules'),'utf8');
-for (const piece of ['rules_version', 'accountAccess', 'adminAudit', 'canUseAccount', 'isOwner']) {
-  if (!rules.includes(piece)) problems.push(`Regra principal incompleta: ${piece}`);
-}
+// O código público não armazena nem valida as regras privadas do Firestore.
+// A segurança das regras deve ser testada separadamente no emulador/Console do Firebase.
 const css = readFileSync(resolve(root,'styles.css'),'utf8');
 if (!css.includes('src/styles/app.css')) problems.push('CSS consolidado não referenciado.');
 const github = readFileSync(resolve(root,'.gitignore'),'utf8');
-if (!github.includes('*.json') || !github.includes('firebase-config.js')) problems.push('Proteção de credenciais incompleta.');
+if (!github.includes('*.json') || !github.includes('firebase-config.js') || !github.split(/\r?\n/).includes('*.rules')) problems.push('Proteção de credenciais incompleta.');
+// .gitignore não desfaz rastreamento antigo; detectar antes da publicação.
+const trackedRules = spawnSync('git', ['ls-files', '--cached', '--', '*.rules'], { cwd: root, encoding: 'utf8' });
+if (trackedRules.status === 0 && trackedRules.stdout.trim()) {
+  problems.push(`Regras privadas ainda rastreadas pelo Git: ${trackedRules.stdout.trim().replace(/\n/g, ', ')}. Execute git rm --cached --ignore-unmatch firestore.rules e faça commit da remoção.`);
+}
+
 
 // Segurança do pacote: nunca distribuir chaves ou configs locais.
 for (const name of readdirSync(root)) {
@@ -52,4 +55,4 @@ for (const name of readdirSync(root)) {
 if (problems.length) {
   for (const problem of problems) console.error(problem);
   process.exitCode = 1;
-} else console.log('Controly: sintaxe, imports, regras e arquivos essenciais OK.');
+} else console.log('Controly: sintaxe, imports e arquivos essenciais OK. Regras Firestore: validação privada separada.');

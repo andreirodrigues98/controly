@@ -13,14 +13,15 @@ test('Admin VORA exige token autenticado e UID autorizado no Worker', () => {
   assert.match(code,/currentDocument:\{exists:false\}/);
   assert.match(code,/\/v1\/audit/);
 });
-test('UI nunca mostra contas de outros usuários por acesso direto ao Firestore', () => {
-  const rules=source('firestore.rules');
-  assert.match(rules,/allow list: if false/);
-  assert.match(rules,/match \/adminAudit/);
-  assert.match(rules,/allow read, write: if false/);
+test('UI consulta contas pela API autenticada, não por acesso direto ao banco', () => {
   const client=source('src/admin/admin-client.js');
   assert.match(client,/getIdToken\(\)/);
   assert.match(client,/Bearer/);
+  assert.match(client,/\/v1\/accounts/);
+  assert.doesNotMatch(client, /getDocs\(|listDocuments\(/);
+  const worker=source('worker-admin/src/index.js');
+  assert.match(worker,/isAdminUid\(payload.sub,env\)/);
+  assert.match(worker,/\/v1\/audit/);
 });
 test('Configuração de produção pode habilitar o Worker sem incluir chaves privadas', () => {
   const sourceEnv = {

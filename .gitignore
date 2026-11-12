@@ -4,6 +4,12 @@
 !.env.development.example
 firebase-config.js
 
+# Regras e copias privadas do banco: ficam no Firebase Console e em backup externo
+*.rules
+*.rules.txt
+private/
+privado/
+
 # Nega JSON e JSONC desconhecidos por padrao (inclui chaves de servico do Google)
 *.json
 *.jsonc

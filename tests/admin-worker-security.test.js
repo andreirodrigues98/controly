@@ -38,12 +38,16 @@ test('Token com aud/issuer errado rejeitado antes da consulta à API',async()=>{
   const fake=[b64({alg:'RS256',kid:'123'}),b64({sub:'adminUser123',aud:'outro-projeto',iss:'https://securetoken.google.com/outro-projeto',iat:now-5,exp:now+200,auth_time:now-10}),Buffer.from('garbage').toString('base64url')].join('.');
   await assert.rejects(verifyFirebaseToken(fake,'fixture-project'), e=>e.status===401);
 });
-test('Acesso suspenso exige regra aplicada no banco; usuário não pode mudar status',()=>{
-  const rules=raw('firestore.rules');
-  assert.match(rules,/function canUseAccount/);
-  assert.match(rules,/data.status == 'active'/);
-  assert.match(rules,/match \/accountAccess/);
-  assert.match(rules,/allow list, create, update, delete: if false/);
+test('Admin usa Worker autenticado, e regras Firestore não são exigidas no repositório',()=>{
+  const checker=raw('scripts/check-project.js');
+  const ignore=raw('.gitignore');
+  const client=raw('src/admin/admin-client.js');
+  assert.doesNotMatch(checker, /readFileSync\(resolve\(root,\s*['"]firestore\.rules/);
+  assert.match(ignore, /^\*\.rules$/m);
+  assert.match(client, /user\.getIdToken\(\)/);
+  assert.match(client, /Authorization: `Bearer \$\{token\}`/);
+  // A verificação do acesso direto ao Firestore continua sendo uma etapa
+  // separada, com regras privadas e Firebase Emulator.
 });
 test('Backend usa uid como autorização secreta e não deixa de proteger alterações',()=>{
   const source=raw('worker-admin/src/index.js');

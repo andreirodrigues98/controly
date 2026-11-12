@@ -12,6 +12,10 @@ for (const file of files) {
     errors.push(`Ausente ou vazio no pacote de publicação: ${file}`);
   }
 }
+// Somente arquivos de frontend. Regras, API administrativa e segredos nunca entram no Pages.
+for (const forbidden of ['firestore.rules', 'worker-admin', 'scripts', '.env.development', '.gitignore', '.github', 'firebase-admin.json']) {
+  if (existsSync(resolve(dist, forbidden))) errors.push(`Arquivo privado ou de desenvolvimento publicado: ${forbidden}`);
+}
 if (errors.length === 0) {
   const html = readFileSync(resolve(dist, 'index.html'), 'utf8');
   const config = readFileSync(resolve(dist, 'firebase-config.js'), 'utf8');

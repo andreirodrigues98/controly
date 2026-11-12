@@ -109,3 +109,9 @@ A aprovação dos testes automatizados não substitui a homologação com Fireba
 
 ## Inicialização em celulares (2.0.10)
 O carregamento possui recuperação após 18 segundos, sem mostrar dados internos ao usuário. A biblioteca de ícones é assíncrona e o Worker administrativo tem tempo máximo de espera. Não são necessárias mudanças nas regras Firestore. Se um aparelho não carregar, testar também em aba privada e verificar no navegador os erros de rede; o fallback não é uma confirmação de causa única.
+
+## Publicação e diagnóstico
+
+O GitHub Pages deve estar em **Settings → Pages → Build and deployment → Source: GitHub Actions**. Publicar diretamente de `main/(root)` não funciona, pois `firebase-config.js` é ignorado pelo Git e gerado exclusivamente em `dist/` pelo build. Após `npm run build:production`, execute `npm run verify:pages` para verificar o artefato antes de publicar. O workflow executa essa verificação automaticamente.
+
+Se aparecer carregamento preso com erro HTTP 404 em `firebase-config.js`, confirme a origem GitHub Actions e abra `https://andreirodrigues98.github.io/controly/firebase-config.js` no navegador. O arquivo deve existir no site publicado, mesmo sem existir no repositório. Não adicione credenciais privadas nem force a inclusão do arquivo gerado no Git.

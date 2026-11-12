@@ -68,6 +68,9 @@ jobs:
           CONTROLY_ADMIN_BACKEND_ENABLED: ${{ vars.CONTROLY_ADMIN_BACKEND_ENABLED || 'false' }}
           CONTROLY_ADMIN_WORKER_URL: ${{ vars.CONTROLY_ADMIN_WORKER_URL || 'https://controly-vora-admin.andreirodrigues1510.workers.dev' }}
 
+      - name: Validar pacote e configuracao Firebase no artefato
+        run: npm run verify:pages
+
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 

@@ -1,6 +1,6 @@
 {
   "name": "controly",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "check": "node scripts/check-project.js",
     "test": "node --test tests/*.test.js",
     "build:production": "node scripts/build-pages.js",
+    "verify:pages": "node scripts/verify-pages.js",
     "admin:deploy": "npm run deploy --prefix worker-admin"
   }
 }

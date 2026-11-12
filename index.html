@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=2.0.10" />
+    <link rel="stylesheet" href="./styles.css?v=2.0.11" />
   </head>
   <body>
     <div id="app-loader" class="app-loader active" aria-live="polite">
@@ -29,7 +29,7 @@
         <p id="app-loader-text">Carregando seu painel pessoal...</p>
         <div id="app-loader-recovery" class="app-loader-recovery" hidden>
           <strong>Não foi possível concluir o carregamento.</strong>
-          <p>Confira sua conexão e tente abrir novamente. Seus dados estão preservados.</p>
+          <p>Tente novamente. Se o problema continuar, entre em contato com o suporte. Seus dados estão preservados.</p>
           <button id="app-loader-retry" class="btn btn-primary" type="button">Tentar novamente</button>
         </div>
       </div>
@@ -300,6 +300,18 @@
     </template>
 
     <script async src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="./src/app.js?v=2.0.10"></script>
+    <script type="module">
+      // Captura falhas de carregamento dos módulos, inclusive configurações ausentes
+      // na publicação. O usuário recebe uma recuperação imediata, sem expor detalhes internos.
+      import('./src/app.js?v=2.0.11').catch(() => {
+        const loader = document.getElementById('app-loader');
+        const recovery = document.getElementById('app-loader-recovery');
+        const text = document.getElementById('app-loader-text');
+        if (!loader || !recovery || !text) return;
+        loader.classList.add('active', 'load-failed');
+        text.textContent = 'Não foi possível abrir o Controly.';
+        recovery.hidden = false;
+      });
+    </script>
   </body>
 </html>

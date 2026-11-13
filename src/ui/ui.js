@@ -631,20 +631,40 @@ export async function closeModal(options = {}) {
   return true;
 }
 
+// Exibe feedback curto sem empilhar mensagens iguais nem cobrir a tela do celular.
+function displayToast(toast, timeoutMs) {
+  if (!toastStack) return;
+  const messageKey = toast.dataset.toastKey;
+  if (messageKey) {
+    for (const previous of toastStack.querySelectorAll('.toast:not(.toast-actionable)')) {
+      if (previous.dataset.toastKey === messageKey) previous.remove();
+    }
+  }
+  toastStack.appendChild(toast);
+  // No máximo dois avisos; uma ação de desfazer tem prioridade sobre avisos simples.
+  while (toastStack.children.length > 2) {
+    const removable = [...toastStack.children].find((item) => !item.classList.contains('toast-actionable'));
+    (removable || toastStack.firstElementChild)?.remove();
+  }
+  refreshIcons(toast);
+  window.setTimeout(() => toast.remove(), timeoutMs);
+}
+
 export function showToast(message, type = "success") {
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
+  toast.dataset.toastKey = `${type}:${message}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
   const title = type === "error" ? "Atenção" : type === "info" ? "Aviso" : "Pronto";
   toast.innerHTML = `<strong>${title}</strong><p>${escapeHtml(message)}</p>`;
-  toastStack.appendChild(toast);
-  refreshIcons(toast);
-  setTimeout(() => toast.remove(), 3600);
+  displayToast(toast, type === 'error' ? 6000 : 4500);
 }
 
 export function showUndoToast(message, undoHandler, options = {}) {
   const { type = "success", actionLabel = "Desfazer", timeout = 7000 } = options;
   const toast = document.createElement("div");
   toast.className = `toast ${type} toast-actionable`;
+  toast.setAttribute('role', 'status');
   toast.innerHTML = `
     <div class="toast-action-content">
       <strong>${type === "error" ? "Erro" : "Atualizado"}</strong>
@@ -671,9 +691,7 @@ export function showUndoToast(message, undoHandler, options = {}) {
     }
   });
 
-  toastStack.appendChild(toast);
-  refreshIcons(toast);
-  setTimeout(closeToast, timeout);
+  displayToast(toast, timeout);
 }
 
 export function setActiveSection(sectionId) {

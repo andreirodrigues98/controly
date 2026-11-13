@@ -48,7 +48,7 @@ test('iPhone: datas não ultrapassam modal e botões de ícone não mostram text
 
 test('cache da versão deve mudar em HTML, CSS e package.json', () => {
   const version = JSON.parse(read('package.json')).version;
-  assert.equal(version, '2.0.14');
-  assert.match(read('index.html'), /app\.js\?v=2\.0\.14/);
-  assert.match(read('styles.css'), /app\.css\?v=2\.0\.14/);
+  assert.equal(version, '2.0.15');
+  assert.match(read('index.html'), /app\.js\?v=2\.0\.15/);
+  assert.match(read('styles.css'), /app\.css\?v=2\.0\.15/);
 });

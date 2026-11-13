@@ -1,8 +1,14 @@
-# Controly 2.0.14
+# Controly 2.0.15
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
 
-## Ajustes de experiência 2.0.14
+## Ajustes de experiência 2.0.15
+
+- Notificações com contraste reforçado, no topo do celular e no máximo duas ao mesmo tempo, preservando desfazer.
+- Formulários com controles de data limitados à largura disponível no Safari; campos mantêm seletor nativo.
+- Ações do formulário de Treinos não encobrem Observações no celular.
+
+### Ajustes anteriores (2.0.14)
 
 - A sessão de estudos iniciada em uma matéria aparece em uma faixa discreta no rodapé, inclusive ao navegar para outras seções. O cronômetro usa o relógio do aparelho para recalcular a duração ao voltar ao aplicativo; a execução contínua em segundo plano pelo iOS não é garantida.
 - Ao registrar o tempo durante uma sessão, o aplicativo salva a duração, encerra a sessão e fecha o modal. Pausar uma sessão também registra o trecho já estudado; o botão de registro não duplica esse trecho.

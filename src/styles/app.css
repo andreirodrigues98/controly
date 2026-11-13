@@ -16089,3 +16089,160 @@ body:has(.controly-focus-bar:not([hidden])) #app-shell .content-area { padding-b
   html[data-theme] .subject-study-summary {grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
   html[data-theme] .subject-study-summary .focus-summary-card { padding:9px 7px !important; }
 }
+
+
+/* Controly 2.0.15 — correção de feedback e controles de data no Safari/iPhone.
+   Regras centralizadas para todos os módulos, sem ocultar recursos nativos. */
+html[data-theme] .modal-root.open .modal-body,
+html[data-theme] .modal-root.open .modal-body :is(form, .stack-form, .field, .inline-fields, .section-accordion-body) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+html[data-theme] .modal-root.open .modal-body .field {
+  min-width: 0;
+  width: 100%;
+}
+html[data-theme] .modal-root.open .modal-body :is(input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"]),
+html[data-theme] .stack-form :is(input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"]) {
+  display: block !important;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box !important;
+  inline-size: 100% !important;
+  min-inline-size: 0 !important;
+  max-inline-size: 100% !important;
+  overflow: hidden;
+  border-radius: 12px;
+  font-size: 16px !important; /* Evita zoom automático do Safari ao focar. */
+  line-height: 1.35 !important;
+  min-height: 48px;
+  padding: 12px 14px !important;
+  text-align: left;
+}
+html[data-theme] :is(input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"])::-webkit-date-and-time-value {
+  display: block;
+  text-align: left;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+html[data-theme] :is(input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"])::-webkit-datetime-edit {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+}
+html[data-theme] :is(input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"])::-webkit-calendar-picker-indicator {
+  flex: 0 0 auto;
+  max-width: 22px;
+  margin: 0 0 0 6px;
+  opacity: .85;
+}
+/* A notificação não pode cobrir os cartões nem a faixa do Pomodoro no rodapé. */
+html[data-theme] body .toast-stack {
+  z-index: 1800 !important;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+html[data-theme] body .toast-stack .toast {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 13px 15px;
+  background: #17243a !important;
+  color: #f8fbff !important;
+  border: 1px solid #64799b !important;
+  border-radius: 14px;
+  box-shadow: 0 15px 34px rgba(0,0,0,.38) !important;
+  overflow-wrap: break-word;
+  word-break: normal;
+  pointer-events: auto;
+}
+html[data-theme] body .toast-stack .toast strong {
+  display: block;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+  color: #fff !important;
+}
+html[data-theme] body .toast-stack .toast p {
+  margin: 4px 0 0;
+  color: #e1eaf7 !important;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+html[data-theme] body .toast-stack .toast.success { border-left: 3px solid #54dcb0 !important; }
+html[data-theme] body .toast-stack .toast.error { border-left: 3px solid #ff9298 !important; }
+html[data-theme] body .toast-stack .toast.toast-actionable {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+html[data-theme] body .toast-stack .toast .toast-action-btn { color:#fff; min-height: 38px; }
+@media (max-width: 640px) {
+  html[data-theme] body .toast-stack {
+    position: fixed !important;
+    top: max(70px, calc(env(safe-area-inset-top, 0px) + 60px)) !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    display: grid;
+    gap: 8px;
+  }
+  html[data-theme] body .toast-stack .toast { margin:0; }
+  html[data-theme] body .toast-stack .toast.toast-actionable { grid-template-columns:minmax(0,1fr) auto; }
+  html[data-theme] body .toast-stack .toast .toast-action-btn { width:auto; padding:8px 11px; }
+  html[data-theme] .modal-root.workout-form-modal.open .modal-dialog {
+    max-height: min(calc(100dvh - 20px), calc(var(--app-visual-height, 100dvh) - 20px)) !important;
+  }
+  html[data-theme] .modal-root.workout-form-modal.open .modal-body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-bottom: 10px !important;
+  }
+  /* Rodapé de Treinos acompanha a rolagem, não encobre Observações. */
+  html[data-theme] .modal-root.workout-form-modal.open #workout-form .sticky-modal-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    margin-top: 12px !important;
+    background: #25344f !important;
+    border-top: 1px solid rgba(192,210,244,.24) !important;
+    box-shadow: 0 -8px 18px rgba(15,24,41,.22) !important;
+    padding: 12px 0 0 !important;
+    z-index: 3 !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 360px) {
+  html[data-theme] body .toast-stack { left: 8px !important; right: 8px !important; }
+  html[data-theme] body .toast-stack .toast.toast-actionable { grid-template-columns: minmax(0,1fr); }
+  html[data-theme] body .toast-stack .toast .toast-action-btn { width: 100%; }
+  html[data-theme] .modal-root.workout-form-modal.open #workout-form .sticky-modal-actions { grid-template-columns:1fr !important; }
+}
+
+/* 2.0.14 havia aplicado display:grid!important em linhas de formulário;
+   isso sobrepunha .hidden e mostrava simultaneamente opções de repetição incompatíveis. */
+html[data-theme] .modal-root.open .modal-body .hidden,
+html[data-theme] .modal-root.open .modal-body [hidden] {
+  display: none !important;
+}
+@media (max-width: 640px) {
+  html[data-theme] .modal-root.workout-form-modal.open #workout-form .sticky-modal-actions > * {
+    grid-column: auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}

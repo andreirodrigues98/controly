@@ -3,6 +3,7 @@ import { deleteNestedArrayItem, deleteRecord, patchRecord, restoreDeletedRecord,
 import { getStudySubjectViews } from '../domain/domain.js';
 import { cleanObjectForWrite, escapeHtml, formatDate, formatMonthLabel, monthKey, toDate, toInputDateValue } from '../shared/utils.js';
 import { scopedKey } from '../security/client-storage.js';
+import { onStateChange } from '../state/state.js';
 
 function getSubjectSessions(subject) {
   return Array.isArray(subject?.studySessions) ? subject.studySessions : [];
@@ -216,6 +217,44 @@ export function createStudiesModule() {
 
   const defaultFocusState = structuredClone(focusState);
 
+  // A faixa fica fora da seção Estudos para aparecer também em Painel, Metas etc.
+  // Apenas um timer por sessão/conta; nunca há mais de um ticker ativo.
+  let focusBar = null;
+  function ensureFocusBar() {
+    if (focusBar?.isConnected) return focusBar;
+    focusBar = document.createElement('aside');
+    focusBar.id = 'controly-focus-bar';
+    focusBar.className = 'controly-focus-bar';
+    focusBar.hidden = true;
+    focusBar.innerHTML = `
+      <span class="focus-bar-dot" aria-hidden="true"></span>
+      <span class="focus-bar-details"><span class="focus-bar-subject"></span><small>Sessão em andamento</small></span>
+      <strong class="focus-bar-time" aria-live="off">00:00</strong>
+      <button type="button" class="focus-bar-open" aria-label="Abrir sessão de estudo">Abrir</button>`;
+    focusBar.querySelector('.focus-bar-open').addEventListener('click', () => {
+      const subject = findSubjectById(focusState.subjectId);
+      if (subject) openFocusSessionModal(subject);
+      else showToast('Abra Estudos para consultar sua sessão.', 'error');
+    });
+    document.body.appendChild(focusBar);
+    return focusBar;
+  }
+
+  function syncFocusBar() {
+    const bar = ensureFocusBar();
+    const activeState = getModeState();
+    const isRunning = Boolean(activeState?.isRunning);
+    const userLoggedIn = Boolean(window.__CONTROLY_STATE?.user?.uid);
+    const appVisible = !document.getElementById('app-shell')?.classList.contains('hidden');
+    const visible = isRunning && userLoggedIn && appVisible && Boolean(focusState.subjectId);
+    bar.hidden = !visible;
+    if (!visible) return;
+    const subject = findSubjectById(focusState.subjectId);
+    bar.querySelector('.focus-bar-subject').textContent = subject?.name || 'Estudos';
+    bar.querySelector('.focus-bar-time').textContent = focusState.mode === 'stopwatch'
+      ? formatClock(getCurrentElapsedMs()) : formatClock(getCurrentRemainingMs());
+  }
+
   function persistFocusState() {
     try {
       const key = scopedKey(FOCUS_STORAGE_KEY);
@@ -285,7 +324,7 @@ export function createStudiesModule() {
   }
 
   async function recordStudyTime(subjectId, mode, durationMs, startedAt, endedAt = Date.now()) {
-    if (!subjectId || !Number.isFinite(durationMs) || durationMs < 1000) return;
+    if (!subjectId || !Number.isFinite(durationMs) || durationMs < 1000) return true;
     const session = {
       id: crypto.randomUUID(),
       mode,
@@ -298,17 +337,19 @@ export function createStudiesModule() {
     studySaveQueue = studySaveQueue.then(async () => {
       const subjects = getStudySubjectViews(window.__CONTROLY_STATE || {});
       const subject = subjects.find((item) => item.id === subjectId);
-      if (!subject) return;
+      if (!subject) throw new Error('Matéria não encontrada para registrar tempo.');
       await saveRecord('studySessions', { ...session, subjectId, subjectName: subject.name || '' });
       const sessions = [session, ...getSubjectSessions(subject)].slice(0, 120);
       const totalMs = Math.max(0, Number(subject.studyTotalMs || 0)) + session.durationMs;
       await patchRecord('subjects', subjectId, { studySessions: sessions, studyTotalMs: totalMs });
+      return true;
     }).catch((error) => {
       console.error(error);
       showToast('Não foi possível registrar o tempo de estudo. Tente novamente.', 'error');
+      return false;
     });
 
-    await studySaveQueue;
+    return studySaveQueue;
   }
 
   function getStudySubjectsFromState() {
@@ -428,29 +469,27 @@ export function createStudiesModule() {
 
   async function persistActiveStudyTime(mode = focusState.mode) {
     const subjectId = focusState.subjectId;
-    if (!subjectId) return;
+    if (!subjectId) return false;
     const now = Date.now();
 
     if (mode === 'pomodoro') {
       const current = focusState.pomodoro;
-      if (!current.isRunning || current.phase !== 'focus' || !current.startedAt) return;
+      if (!current.isRunning || current.phase !== 'focus' || !current.startedAt) return true;
       const durationMs = Math.max(0, current.segmentInitialRemainingMs - getCurrentRemainingMs('pomodoro'));
-      await recordStudyTime(subjectId, 'pomodoro', durationMs, now - durationMs, now);
-      return;
+      return recordStudyTime(subjectId, 'pomodoro', durationMs, now - durationMs, now);
     }
 
     if (mode === 'timer') {
       const current = focusState.timer;
-      if (!current.isRunning || !current.startedAt) return;
+      if (!current.isRunning || !current.startedAt) return true;
       const durationMs = Math.max(0, current.segmentInitialRemainingMs - getCurrentRemainingMs('timer'));
-      await recordStudyTime(subjectId, 'timer', durationMs, now - durationMs, now);
-      return;
+      return recordStudyTime(subjectId, 'timer', durationMs, now - durationMs, now);
     }
 
     const current = focusState.stopwatch;
     if (!current.isRunning || !current.startedAt) return;
     const durationMs = Math.max(0, now - current.startedAt);
-    await recordStudyTime(subjectId, 'stopwatch', durationMs, now - durationMs, now);
+    return recordStudyTime(subjectId, 'stopwatch', durationMs, now - durationMs, now);
   }
 
   async function pauseMode(mode = focusState.mode) {
@@ -458,7 +497,11 @@ export function createStudiesModule() {
     if (!current.isRunning) return;
     const currentRemainingMs = mode === 'stopwatch' ? 0 : getCurrentRemainingMs(mode);
     const currentElapsedMs = mode === 'stopwatch' ? getCurrentElapsedMs() : 0;
-    await persistActiveStudyTime(mode);
+    // Congela o ticker durante o salvamento: sem gravação concorrente ao fim
+    // do ciclo e sem gerar duas sessões no mesmo segundo.
+    stopTicker();
+    const persisted = await persistActiveStudyTime(mode);
+    if (persisted === false) { startTicker(); return false; }
     if (mode === 'stopwatch') {
       current.baseElapsedMs = currentElapsedMs;
     } else {
@@ -470,6 +513,7 @@ export function createStudiesModule() {
     if (!focusState.pomodoro.isRunning && !focusState.timer.isRunning && !focusState.stopwatch.isRunning) stopTicker();
     persistFocusState();
     syncFocusDisplay();
+    return true;
   }
 
   async function pauseAllModes() {
@@ -581,6 +625,7 @@ export function createStudiesModule() {
     persistFocusState();
     syncFocusDisplay();
     startTicker();
+    showToast('Pode fechar esta janela ou mudar de seção. Seu tempo continua contando.');
   }
 
   async function resetMode(mode = focusState.mode) {
@@ -590,6 +635,20 @@ export function createStudiesModule() {
     if (mode === 'stopwatch') resetStopwatch();
     persistFocusState();
     syncFocusDisplay();
+  }
+
+  async function registerAndCloseFocusSession() {
+    const mode = focusState.mode;
+    const wasRunning = Boolean(getModeState(mode)?.isRunning);
+    if (wasRunning) {
+      const persisted = await pauseMode(mode);
+      if (persisted === false) return false;
+    }
+    // As pausas já registram o segmento; não duplicar o tempo ao salvar.
+    await resetMode(mode);
+    await closeModal({ force: true });
+    showToast(wasRunning ? 'Tempo de estudo registrado.' : 'Sessão encerrada. O tempo registrado foi preservado.');
+    return true;
   }
 
   function buildFocusPanel(subjects) {
@@ -690,7 +749,7 @@ export function createStudiesModule() {
         <div class="inline-actions timer-actions">
           <button type="button" class="btn btn-primary" data-focus-action="start" ${isRunning ? 'disabled' : ''}>${isRunning ? 'Em andamento' : startLabel}</button>
           <button type="button" class="btn btn-secondary" data-focus-action="pause" ${isRunning ? '' : 'disabled'}>Pausar</button>
-          <button type="button" class="btn btn-secondary" data-focus-action="save" ${isRunning ? 'disabled' : ''}>Registrar tempo</button>
+          <button type="button" class="btn btn-secondary" data-focus-action="save">Registrar tempo</button>
           <button type="button" class="btn btn-secondary" data-focus-action="reset">Reiniciar</button>
         </div>
         </div>
@@ -721,12 +780,21 @@ export function createStudiesModule() {
       const actionButton = event.target.closest('[data-focus-action]');
       if (!actionButton || actionButton.disabled) return;
       actionButton.disabled = true;
+      const isSaving = actionButton.dataset.focusAction === 'save';
+      if (isSaving) {
+        actionButton.setAttribute('aria-busy', 'true');
+        actionButton.textContent = 'Registrando...';
+      }
       try {
         if (actionButton.dataset.focusAction === 'start') await startMode();
         if (actionButton.dataset.focusAction === 'pause') await pauseMode();
-        if (actionButton.dataset.focusAction === 'save') { await persistActiveStudyTime(); await resetMode(); }
+        if (isSaving) await registerAndCloseFocusSession();
         if (actionButton.dataset.focusAction === 'reset') await resetMode();
-      } finally { syncFocusDisplay(); }
+      } finally {
+        actionButton.removeAttribute('aria-busy');
+        if (isSaving && actionButton.isConnected) actionButton.textContent = 'Registrar tempo';
+        syncFocusDisplay();
+      }
     });
     wrapper?.addEventListener('change', (event) => {
       const input = event.target.closest('[data-focus-input]');
@@ -745,6 +813,7 @@ export function createStudiesModule() {
   }
 
   function syncFocusDisplay() {
+    syncFocusBar();
     if (!root) return;
     // A sessão é configurada no modal da matéria; o tempo continua visível no cartão.
     const panel = document.querySelector('.modal-root.open [data-focus-panel]');
@@ -752,11 +821,21 @@ export function createStudiesModule() {
     const running = Boolean(activeState?.isRunning);
     const clock = focusState.mode === 'stopwatch' ? formatClock(getCurrentElapsedMs()) : formatClock(getCurrentRemainingMs());
     root.querySelectorAll('[data-study-mini-clock]').forEach((chip) => {
-      if (chip.dataset.studyMiniClock !== focusState.subjectId) return;
+      const isSelected = chip.dataset.studyMiniClock === focusState.subjectId;
       chip.textContent = clock;
-      chip.classList.toggle('is-running', running);
+      chip.classList.toggle('is-running', isSelected && running);
       chip.title = running ? 'Sessão de estudo em andamento' : 'Sessão de estudo pausada';
-      chip.hidden = !running && !Number(activeState?.baseElapsedMs) && !(focusState.mode !== 'stopwatch' && Number(activeState?.baseRemainingMs) !== (focusState.mode === 'pomodoro' ? focusState.pomodoro.focusMinutes * 60000 : focusState.timer.minutes * 60000));
+      chip.hidden = !isSelected || (!running && !Number(activeState?.baseElapsedMs) && !(focusState.mode !== 'stopwatch' && Number(activeState?.baseRemainingMs) !== (focusState.mode === 'pomodoro' ? focusState.pomodoro.focusMinutes * 60000 : focusState.timer.minutes * 60000)));
+    });
+    root.querySelectorAll('[data-action="focus-subject"]').forEach((button) => {
+      const isCurrent = button.dataset.id === focusState.subjectId;
+      const currentTimer = getModeState();
+      const hasSession = isCurrent && (currentTimer.isRunning || (focusState.mode === 'stopwatch'
+        ? currentTimer.baseElapsedMs > 0
+        : currentTimer.baseRemainingMs !== (focusState.mode === 'pomodoro' ? currentTimer.focusMinutes * 60000 : currentTimer.minutes * 60000)));
+      const label = hasSession ? 'Ver sessão' : 'Estudar agora';
+      const labelNode = button.querySelector('[data-focus-button-label]');
+      if (labelNode) labelNode.textContent = label;
     });
     if (!panel) return;
 
@@ -804,7 +883,7 @@ export function createStudiesModule() {
       startButton.textContent = isRunning ? 'Em andamento' : startLabel;
     }
     if (pauseButton) pauseButton.disabled = !isRunning;
-    if (saveButton) saveButton.disabled = isRunning;
+    if (saveButton) saveButton.disabled = false;
   }
 
   function openSubjectForm(subject = null) {
@@ -816,10 +895,10 @@ export function createStudiesModule() {
           <label class="field"><span>Nome da matéria</span><input class="input" name="name" value="${escapeHtml(subject?.name || '')}" placeholder="Ex.: Matemática, Direito Civil, Inglês" required /></label>
           <label class="field"><span>Área ou categoria</span><input class="input" name="area" value="${escapeHtml(subject?.area || '')}" placeholder="Ex.: Faculdade, curso, concurso ou estudo pessoal" /></label>
           <div class="inline-fields">
-            <label class="field"><span>Por quanto tempo você pretende estudar?</span><select class="select" name="studyPeriod">
-              <option value="continuous" ${!subject?.studyPeriod || subject?.studyPeriod === 'continuous' ? 'selected' : ''}>Estudo contínuo, sem data final definida</option>
-              <option value="year" ${subject?.studyPeriod === 'year' ? 'selected' : ''}>Durante o ano todo</option>
-              <option value="deadline" ${subject?.studyPeriod === 'deadline' ? 'selected' : ''}>Até uma data específica</option>
+            <label class="field"><span>Duração dos estudos</span><select class="select" name="studyPeriod">
+              <option value="continuous" ${!subject?.studyPeriod || subject?.studyPeriod === 'continuous' ? 'selected' : ''}>Contínuo (sem prazo)</option>
+              <option value="year" ${subject?.studyPeriod === 'year' ? 'selected' : ''}>Ano inteiro</option>
+              <option value="deadline" ${subject?.studyPeriod === 'deadline' ? 'selected' : ''}>Até uma data</option>
             </select></label>
             <label class="field"><span>Data final (opcional)</span><input class="input" type="date" name="endDate" value="${escapeHtml(toInputDateValue(subject?.endDate || ''))}" /></label>
           </div>
@@ -1097,7 +1176,7 @@ export function createStudiesModule() {
       <details class="section-accordion ${finished ? 'is-archived-period' : ''}" ${open ? 'open' : ''} data-search-id="studies:${escapeHtml(subject.id)}" data-subject-id="${escapeHtml(subject.id)}" data-subject-name="${escapeHtml(subject.name || 'Matéria')}" data-subject-area="${escapeHtml(subject.area || '')}">
         <summary>
           <div class="section-accordion-head">
-            <strong>${escapeHtml(subject.name)} ${activeFocus ? `<span class="subject-mini-clock ${timerState.isRunning ? 'is-running' : ''}" data-study-mini-clock="${escapeHtml(subject.id)}" ${hasFocusSession ? '' : 'hidden'}>${subjectClock}</span>` : ''}</strong>
+            <strong>${escapeHtml(subject.name)} <span class="subject-mini-clock ${activeFocus && timerState.isRunning ? 'is-running' : ''}" data-study-mini-clock="${escapeHtml(subject.id)}" ${hasFocusSession ? '' : 'hidden'}>${subjectClock}</span></strong>
             <div class="section-accordion-meta">
               ${subject.area ? `<span class="chip">${escapeHtml(subject.area)}</span>` : ''}
               <span class="chip">${escapeHtml(periodLabel)}</span>
@@ -1110,7 +1189,7 @@ export function createStudiesModule() {
           <div class="item-top">
             <div class="module-subtitle">Acompanhe tarefas, datas importantes, tempo de estudo e anotações desta matéria.</div>
             <div class="inline-actions">
-              <button type="button" class="btn btn-secondary" data-action="focus-subject" data-id="${escapeHtml(subject.id)}">${icon('timer', 'Abrir sessão de foco')} ${focusActionLabel}</button>
+              <button type="button" class="btn btn-secondary" data-action="focus-subject" data-id="${escapeHtml(subject.id)}">${icon('timer', 'Abrir sessão de foco')} <span data-focus-button-label>${focusActionLabel}</span></button>
               <button type="button" class="icon-btn small" data-action="edit-subject" data-id="${escapeHtml(subject.id)}">${icon('pencil-line', 'Editar matéria')}</button>
               <button type="button" class="icon-btn small" data-action="delete-subject" data-id="${escapeHtml(subject.id)}">${icon('trash-2', 'Excluir matéria')}</button>
             </div>
@@ -1298,6 +1377,15 @@ export function createStudiesModule() {
 
   function init(element) {
     root = element;
+    ensureFocusBar();
+    onStateChange((changeKey) => {
+      if (changeKey === 'user' || changeKey === 'reset') {
+        lastRenderedSubjects = [];
+        hydrateFocusState();
+        syncFocusDisplay();
+      }
+      if (changeKey === 'subjects' || changeKey === 'currentSection') syncFocusBar();
+    });
     window.__CONTROLY_OPENERS = window.__CONTROLY_OPENERS || {};
     window.__CONTROLY_OPENERS.studies = ({ id, action } = {}) => {
       const subjects = getStudySubjectsFromState();
@@ -1337,7 +1425,7 @@ export function createStudiesModule() {
       if (button.dataset.focusAction) {
         if (button.dataset.focusAction === 'start') await startMode();
         if (button.dataset.focusAction === 'pause') await pauseMode();
-        if (button.dataset.focusAction === 'save') { await persistActiveStudyTime(); await resetMode(); }
+        if (button.dataset.focusAction === 'save') await registerAndCloseFocusSession();
         if (button.dataset.focusAction === 'reset') await resetMode();
         return;
       }
@@ -1380,12 +1468,12 @@ export function createStudiesModule() {
               moduleLabel: 'Estudos',
               itemType: 'registro de tempo',
             });
-            const previousTotal = Number(subject.studyTotalMs || 0);
-            const totalMs = Math.max(0, previousTotal - Number(session.durationMs || 0));
-            await patchRecord('subjects', subject.id, { studyTotalMs: totalMs });
-            showUndoToast('Registro de tempo enviado para a lixeira.', async () => {
+            if (result?.missing) {
+              showToast('Este tempo já foi removido. Atualize a lista de estudos.');
+              return;
+            }
+            showUndoToast('Tempo de estudo removido. Você pode desfazer.', async () => {
               if (result?.trashId) await restoreDeletedRecord(result.trashId);
-              await patchRecord('subjects', subject.id, { studyTotalMs: previousTotal });
             });
           } catch (error) {
             console.error(error);

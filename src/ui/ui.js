@@ -740,7 +740,10 @@ export async function runButtonAction(actionKey, button, handler, options = {}) 
     item.setAttribute('aria-busy', 'true');
     item.classList.add('is-busy');
   });
-  if (button && options.busyText) button.textContent = options.busyText;
+  // Em botões apenas com ícone, substituir por “Enviando...” cria texto
+  // vertical e amplia o cartão no iPhone. Mantemos o ícone e o estado ocupado.
+  const compactAction = Boolean(button && (button.matches('.icon-btn, [aria-label]') || button.getBoundingClientRect().width < 100));
+  if (button && options.busyText && !compactAction) button.textContent = options.busyText;
 
   try {
     return await handler();
@@ -751,7 +754,7 @@ export async function runButtonAction(actionKey, button, handler, options = {}) 
         item.removeAttribute('aria-busy');
         item.classList.remove('is-busy');
       });
-      if (button && options.busyText && previousText != null) button.textContent = previousText;
+      if (button && options.busyText && !compactAction && previousText != null) button.textContent = previousText;
       runningActionKeys.delete(key);
     }, Number(options.releaseDelay || 500));
   }

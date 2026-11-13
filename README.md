@@ -1,6 +1,14 @@
-# Controly 2.0.13
+# Controly 2.0.14
 
 Aplicação de organização pessoal com Firebase Authentication, Firestore, interface Glass e administração VORA por API gratuita em Cloudflare Workers. **Este repositório não contém credenciais privadas.**
+
+## Ajustes de experiência 2.0.14
+
+- A sessão de estudos iniciada em uma matéria aparece em uma faixa discreta no rodapé, inclusive ao navegar para outras seções. O cronômetro usa o relógio do aparelho para recalcular a duração ao voltar ao aplicativo; a execução contínua em segundo plano pelo iOS não é garantida.
+- Ao registrar o tempo durante uma sessão, o aplicativo salva a duração, encerra a sessão e fecha o modal. Pausar uma sessão também registra o trecho já estudado; o botão de registro não duplica esse trecho.
+- A exclusão/restauração de registros de estudo atualiza os totais no mesmo processo transacional, reduzindo inconsistências.
+- Formulários, campos de data e botões compactos foram ajustados para telas de 320–414 px. No Safari real, confira especialmente a abertura do teclado e o seletor de data.
+
 
 ## Regras do Firestore não ficam no GitHub
 
@@ -32,7 +40,7 @@ O painel só aparece quando a API autentica a conta por **UID** (não por e-mail
 1. Faça backup das regras atuais no Firebase e confira o ID do projeto (`controly-ec636`).
 2. Entre em `worker-admin/wrangler.jsonc`: confirme `FIREBASE_PROJECT_ID` e `ALLOWED_ORIGINS`. Já estão incluídos os dois endereços do Live Server e `https://andreirodrigues98.github.io`. Nunca use `*` como origem.
 3. Confirme no Cloudflare que existem os segredos `VORA_ADMIN_UIDS` e `FIREBASE_SERVICE_ACCOUNT_JSON`. Não compartilhe seus valores. O primeiro deve conter o UID **exato** do usuário atualmente conectado, ou uma lista separada por vírgulas de UIDs autorizados.
-**Cadastro de usuários (2.0.13):** além desses dois segredos, cadastre uma vez `FIREBASE_WEB_API_KEY` na Cloudflare usando `npx wrangler secret put FIREBASE_WEB_API_KEY` dentro de `worker-admin`. O valor é o `apiKey` da configuração Web do projeto Firebase (não é a chave privada da conta de serviço). No Google Cloud IAM, conceda à **mesma conta de serviço utilizada pelo Worker** o papel `Firebase Authentication Admin` (`roles/firebaseauth.admin`), além do acesso ao Firestore já existente. Essa permissão permite criar identidades; conceda-a somente à conta de serviço restrita a essa API. Não salve a chave no repositório. Confira também que o provedor E-mail/senha está habilitado no Firebase Authentication.
+**Cadastro de usuários (2.0.14):** além desses dois segredos, cadastre uma vez `FIREBASE_WEB_API_KEY` na Cloudflare usando `npx wrangler secret put FIREBASE_WEB_API_KEY` dentro de `worker-admin`. O valor é o `apiKey` da configuração Web do projeto Firebase (não é a chave privada da conta de serviço). No Google Cloud IAM, conceda à **mesma conta de serviço utilizada pelo Worker** o papel `Firebase Authentication Admin` (`roles/firebaseauth.admin`), além do acesso ao Firestore já existente. Essa permissão permite criar identidades; conceda-a somente à conta de serviço restrita a essa API. Não salve a chave no repositório. Confira também que o provedor E-mail/senha está habilitado no Firebase Authentication.
 
 Ao clicar em **Cadastrar e enviar acesso**, o Worker cria a identidade com senha aleatória e envia um e-mail para a pessoa definir a própria senha. A senha não aparece para o administrador. Se o e-mail não for confirmado, a conta ficará em **Aguardando acesso**, sem acesso aos dados, até o envio ser refeito. O botão **Remover acesso** arquiva e bloqueia a conta, **sem excluir seus dados ou sua identidade no Firebase Authentication**; isso permite restaurar o acesso depois. Exclusão definitiva exige um processo separado de retenção, direitos do titular e remoção dos registros relacionados.
 

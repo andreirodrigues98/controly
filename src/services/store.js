@@ -409,7 +409,17 @@ export async function deleteNestedArrayItem(collectionName, recordId, fieldName,
       updatedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
     });
-        transaction.update(parentRef, { [fieldName]: freshItems.filter((item) => item?.id !== itemId), updatedAt: serverTimestamp() });
+        const nextValues = {
+          [fieldName]: freshItems.filter((item) => item?.id !== itemId),
+          updatedAt: serverTimestamp(),
+        };
+        if (fieldName === 'studySessions') {
+          // O total acompanha a exclusão NA MESMA transação, evitando atualização
+          // parcial ou valor errado em caso de rede lenta / concorrência.
+          nextValues.studyTotalMs = Math.max(0, Number(freshParent.data()?.studyTotalMs || 0) - Math.max(0, Number(freshNested.durationMs || 0)));
+          transaction.delete(userDoc('studySessions', itemId, userId));
+        }
+        transaction.update(parentRef, nextValues);
         return true;
       });
       assertUnchangedUser(userId);
@@ -459,6 +469,14 @@ export async function restoreDeletedRecord(trashId) {
         restorePatch.studyTotalMs = Math.max(0, Number(parentData.studyTotalMs || 0)) + Math.max(0, Number(itemToRestore.durationMs || 0));
       }
       transaction.update(parentRef, restorePatch);
+      if (fieldName === 'studySessions' && !alreadyRestored) {
+        transaction.set(userDoc('studySessions', nestedId, userId), {
+          ...itemToRestore,
+          subjectId: parentId,
+          subjectName: parentData.name || '',
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
       transaction.delete(trashRef);
       return { collectionName: parentCollection, originalId: parentId };
     });

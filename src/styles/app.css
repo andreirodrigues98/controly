@@ -15986,3 +15986,106 @@ html[data-theme] .search-palette-dialog {max-width: min(900px, calc(100vw - 24px
 .admin-state.is-pending{color:#f4d19d}.admin-state.is-removed{color:#ff9d9d}
 @media(max-width:980px){.admin-create-form{grid-template-columns:1fr 1fr}.admin-create-form button{grid-column:1/-1}}
 @media(max-width:580px){.admin-create-form{grid-template-columns:1fr}.admin-create-form button{grid-column:auto}.admin-row-actions{flex-direction:column;align-items:flex-start}}
+
+
+/* Controly 2.0.14 — formulários estáveis no Safari/iPhone e telas compactas */
+html[data-theme] :is(.modal-body,.stack-form,.field,.inline-fields,.focus-config-grid,.subject-topic-body,.item-top) {
+  min-width: 0; max-width: 100%; box-sizing: border-box;
+}
+html[data-theme] .modal-body :is(input, select, textarea),
+html[data-theme] .stack-form :is(input, select, textarea) {
+  display: block; min-width: 0 !important; max-width: 100% !important; width: 100%;
+  box-sizing: border-box !important;
+}
+html[data-theme] .modal-body input[type="date"],
+html[data-theme] .modal-body input[type="datetime-local"],
+html[data-theme] .modal-body input[type="month"],
+html[data-theme] .modal-body input[type="time"] {
+  -webkit-min-logical-width: 0; min-width: 0 !important;
+  max-width: 100% !important; width: 100% !important;
+  padding-left: 12px !important; padding-right: 10px !important;
+  font-size: max(16px, 1rem) !important;
+}
+html[data-theme] input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+html[data-theme] input::-webkit-datetime-edit { min-width: 0; padding: 0; }
+html[data-theme] input::-webkit-calendar-picker-indicator { margin: 0 0 0 4px; flex-shrink: 0; }
+html[data-theme] .modal-body .inline-fields {
+  display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 12px !important; width: 100% !important;
+}
+html[data-theme] .modal-body .inline-fields > *,
+html[data-theme] .modal-body .focus-config-grid > * { min-width: 0 !important; max-width: 100% !important; }
+html[data-theme] :is(.modal-dialog,.modal-body,.stack-form) { overscroll-behavior: contain; }
+html[data-theme] .modal-body { -webkit-overflow-scrolling: touch; }
+html[data-theme] .modal-root.open .modal-dialog {
+  max-height: min(calc(100dvh - 22px), calc(var(--app-visual-height, 100dvh) - 22px)) !important;
+}
+html[data-theme] .modal-root.open .modal-body {
+  overflow-x: hidden !important; overflow-y: auto !important;
+  scrollbar-gutter: stable;
+}
+html[data-theme] .modal-body .inline-actions { flex-wrap: wrap; min-width: 0; }
+html[data-theme] .modal-body .inline-actions > * { min-width: 0; max-width: 100%; }
+html[data-theme] .is-busy.icon-btn { position: relative; opacity: .7; }
+html[data-theme] .is-busy.icon-btn::after {
+  content: ''; position: absolute; top: 3px; right: 3px; width: 7px; height: 7px;
+  border-radius: 50%; background: currentColor; opacity: .7;
+}
+/* Faixa única de sessão ativa; sobre o app, abaixo dos modais */
+.controly-focus-bar[hidden] { display: none !important; }
+.controly-focus-bar {
+  position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%);
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(580px, calc(100% - 24px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 18px;
+  background: rgba(31,47,76,.94); color: #fff;
+  border: 1px solid rgba(198,215,255,.30);
+  box-shadow: 0 16px 36px rgba(0,0,0,.35);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-sizing: border-box;
+}
+.controly-focus-bar .focus-bar-dot { flex: 0 0 8px; width:8px; height:8px; border-radius:50%; background:#5fe0a4; box-shadow:0 0 10px rgba(95,224,164,.6); }
+.controly-focus-bar .focus-bar-details { display:grid; gap:2px; flex:1 1 auto; min-width:0; }
+.controly-focus-bar .focus-bar-subject { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:.9rem; font-weight:700; }
+.controly-focus-bar small { font-size:.68rem; color:rgba(238,244,255,.74); }
+.controly-focus-bar .focus-bar-time { font-size:1.05rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.controly-focus-bar .focus-bar-open { border:1px solid rgba(255,255,255,.27); background:rgba(255,255,255,.10); color:#fff; border-radius:10px; min-height:38px; padding:6px 12px; font:inherit; font-size:.84rem; font-weight:650; cursor:pointer; }
+.controly-focus-bar .focus-bar-open:focus-visible { outline:2px solid white; outline-offset:2px; }
+body:has(.controly-focus-bar:not([hidden])) #app-shell .content-area { padding-bottom: 115px !important; }
+@media(max-width: 640px) {
+  html[data-theme] .modal-body .inline-fields { grid-template-columns: minmax(0,1fr) !important; }
+  html[data-theme] .modal-root.open {
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  html[data-theme] .modal-root.open .modal-dialog {
+    width: 100% !important; max-width:100% !important;
+    padding: 16px 14px !important;
+    max-height: min(calc(100dvh - 16px), calc(var(--app-visual-height, 100dvh) - 16px)) !important;
+  }
+  html[data-theme] .modal-root.open .modal-header { flex:0 0 auto; gap:8px !important; }
+  html[data-theme] .modal-root.open .modal-body { scrollbar-gutter:auto; padding-inline:0 !important; }
+  html[data-theme] .subject-study-summary {
+    display:grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap:9px !important;
+  }
+  html[data-theme] .subject-study-summary .focus-summary-card { min-width:0; padding:12px 10px !important; }
+  html[data-theme] .subject-study-summary .label { font-size: .72rem; }
+  html[data-theme] .subject-study-summary strong { font-size: 1rem; }
+  html[data-theme] .study-focus-shell .timer-mode-tabs {
+    display:flex !important; gap:7px; flex-wrap:nowrap !important; overflow-x:auto; width:100%; -webkit-overflow-scrolling:touch;
+  }
+  html[data-theme] .study-focus-shell .timer-mode-tabs > * { flex:0 0 auto !important; min-width:0; font-size:.82rem !important; padding-inline:11px !important; }
+  html[data-theme] .study-focus-shell .timer-display { padding:16px 12px !important; min-height:165px !important; }
+  html[data-theme] .study-focus-shell .timer-display strong { font-size:clamp(2.5rem,12vw,4.2rem) !important; }
+  html[data-theme] .study-focus-shell .timer-actions {display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;}
+  html[data-theme] .study-focus-shell .timer-actions > .btn {flex:none !important;width:100% !important;min-width:0 !important;white-space:normal;}
+  .controly-focus-bar { width:calc(100% - 18px); padding:9px 10px; gap:8px; bottom:max(8px,env(safe-area-inset-bottom)); }
+  .controly-focus-bar .focus-bar-open { padding:6px 10px; }
+}
+@media(max-width:360px) {
+  .controly-focus-bar .focus-bar-subject {font-size:.82rem;}
+  .controly-focus-bar .focus-bar-time {font-size:.93rem;}
+  html[data-theme] .modal-root.open .modal-dialog {padding:13px 11px !important;}
+  html[data-theme] .subject-study-summary {grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+  html[data-theme] .subject-study-summary .focus-summary-card { padding:9px 7px !important; }
+}
